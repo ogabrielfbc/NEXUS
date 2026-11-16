@@ -1,0 +1,17 @@
+
+# Credenciais
+.env
+.env.*
+
+# Dependências
+node_modules/
+
+# Arquivos temporários
+*.log
+.DS_Store
+Thumbs.db
+
+# Cache
+.cache/
+tmp/
+assets/models/models.zip

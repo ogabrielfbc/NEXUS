@@ -1,0 +1,1108 @@
+/* =========================================
+   NEXUS TECH — ESTILOS GERAIS
+   ========================================= */
+
+:root {
+    --bg: #0b0b0f;
+    --surface: #15151c;
+    --surface-light: #20202a;
+    --border: #30303b;
+    --blue: #a7a0ff;
+    --blue-dark: #7168e8;
+    --text: #f4f3fa;
+    --muted: #aaa8b8;
+    --image-bg: #d8d6d0;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    background:
+        radial-gradient(ellipse at 18% 18%, rgba(83, 76, 130, .10), transparent 38%),
+        var(--bg);
+    color: var(--text);
+    font-family: Arial, sans-serif;
+}
+
+/* =========================================
+   MENU
+   ========================================= */
+
+.navbar {
+    background: #0c1424;
+    border-bottom: 1px solid #1d2b42;
+    padding: 14px 0;
+}
+
+.navbar-brand {
+    color: #fff !important;
+    font-size: 25px;
+    font-weight: 700;
+}
+
+.navbar-brand span {
+    color: var(--blue);
+}
+
+.nav-link {
+    color: #cbd5e1 !important;
+    margin-left: 15px;
+    transition: color .2s ease;
+}
+
+.nav-link:hover {
+    color: var(--blue) !important;
+}
+
+/* =========================================
+   BANNER PRINCIPAL
+   ========================================= */
+
+.hero {
+    padding: 90px 0;
+    background: linear-gradient(120deg, #080d18, #10213c);
+}
+
+.hero h1 {
+    margin-bottom: 20px;
+    font-size: clamp(36px, 5vw, 58px);
+    line-height: 1.12;
+    font-weight: 700;
+}
+
+.hero h1 span {
+    color: var(--blue);
+}
+
+.hero p {
+    max-width: 500px;
+    margin-bottom: 26px;
+    color: #a9b7ca;
+    font-size: 17px;
+    line-height: 1.7;
+}
+
+.btn-nexus {
+    display: inline-block;
+    padding: 12px 24px;
+    border-radius: 8px;
+    background: var(--blue-dark);
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+    transition: .25s ease;
+}
+
+.btn-nexus:hover {
+    background: var(--blue);
+    color: #080d18;
+    transform: translateY(-2px);
+}
+
+.hero-card {
+    min-height: 260px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #294568;
+    border-radius: 18px;
+    background: linear-gradient(145deg, #172b49, #0b1424);
+}
+
+.hero-icon {
+    font-size: 105px;
+    filter: drop-shadow(0 0 22px rgba(2, 132, 199, .65));
+}
+
+/* =========================================
+   TÍTULOS E CATEGORIAS
+   ========================================= */
+
+.section-title {
+    margin-bottom: 26px;
+    color: var(--text);
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.category-card {
+    height: 100%;
+    padding: 25px 12px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    text-align: center;
+    transition: .25s ease;
+}
+
+.category-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--blue);
+    background: #142238;
+}
+
+.category-card .icon {
+    margin-bottom: 10px;
+    font-size: 34px;
+}
+
+.category-card h3 {
+    margin: 0;
+    color: var(--text);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+/* =========================================
+   CARDS DOS PRODUTOS — HOME
+   ========================================= */
+
+.product-card {
+    height: 100%;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    transition: border-color .25s ease, transform .25s ease;
+}
+
+.product-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--blue);
+}
+
+.product-image {
+    width: 100%;
+    height: auto;
+    padding: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    overflow: hidden;
+    background: var(--image-bg);
+}
+
+.product-image img {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    object-position: center;
+}
+
+.product-image span {
+    font-size: 52px;
+}
+
+.product-info {
+    min-height: 220px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+.product-info h3 {
+    min-height: 40px;
+    margin: 0 0 8px;
+    color: var(--text);
+    font-size: 16px;
+    line-height: 1.35;
+    font-weight: 700;
+}
+
+.product-info p {
+    min-height: 38px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.product-info h4 {
+    margin: 0 0 7px;
+    color: var(--blue);
+    font-size: 19px;
+    font-weight: 700;
+}
+
+.product-info small {
+    margin-bottom: 13px;
+    color: var(--muted);
+}
+
+.btn-product {
+    display: block;
+    width: 100%;
+    margin-top: auto;
+    padding: 10px 12px;
+    border-radius: 7px;
+    background: var(--blue-dark);
+    color: #fff;
+    text-align: center;
+    text-decoration: none;
+    text-transform: capitalize;
+    font-size: 13px;
+    font-weight: 700;
+    transition: .2s ease;
+}
+
+.btn-product:hover {
+    background: var(--blue);
+    color: #08111e;
+}
+
+/* =========================================
+   RODAPÉ
+   ========================================= */
+
+footer {
+    margin-top: 75px;
+    padding: 25px 15px;
+    border-top: 1px solid #1d2b42;
+    background: #0c1424;
+    color: #8292a8;
+    text-align: center;
+}
+
+footer p {
+    margin: 6px 0;
+    font-size: 13px;
+}
+
+/* =========================================
+   PÁGINA DE DETALHES DO PRODUTO
+   ========================================= */
+
+.product-details {
+    max-width: 1320px;
+    padding-top: 42px;
+    padding-bottom: 50px;
+}
+
+.product-details > a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    color: #aaa8b8;
+    font-size: 14px;
+    text-decoration: none;
+    transition: color .2s ease;
+}
+
+.product-details > a:hover {
+    color: #fff;
+}
+
+.btn-voltar-loja {
+      flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 48px;
+    padding: 0 22px;
+    border: 1px solid #c5c0ff;
+    border-radius: 999px;
+    background: #f2f0ff;
+    color: #171622;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
+}
+
+.btn-voltar-loja:hover {
+    transform: translateY(-1px);
+    border-color: #8179df;
+    background: #22212d;
+    color: #fff;
+}
+
+.btn-voltar-loja span {
+    font-size: 17px;
+    line-height: 1;
+}
+
+.product-details > .row {
+    --bs-gutter-x: 42px;
+    align-items: start;
+    margin-top: 22px !important;
+}
+
+/* =========================================
+   GALERIA DE IMAGENS
+   ========================================= */
+
+.product-gallery {
+    width: 100%;
+    max-width: 100%;
+}
+
+.product-gallery-grid {
+    display: grid;
+    grid-template-columns: 104px minmax(0, 1fr);
+    grid-template-rows: repeat(4, minmax(105px, auto));
+    gap: 14px;
+    align-items: stretch;
+}
+
+.product-gallery-item {
+    width: 100%;
+    height: 100%;
+    min-height: 105px;
+    max-width: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 0;
+    border: 1px solid #292933;
+    border-radius: 12px;
+    background: #202027;
+    cursor: pointer;
+    transition: border-color .2s ease, transform .2s ease;
+}
+
+.product-gallery-item:hover {
+    border-color: #8d85f5;
+    transform: translateY(-2px);
+}
+
+.product-gallery-item:focus-visible {
+    outline: 2px solid var(--blue);
+    outline-offset: 3px;
+}
+
+.product-gallery-item:first-child {
+    grid-column: 2;
+    grid-row: 1 / span 4;
+    min-height: 450px;
+    background: var(--image-bg);
+}
+
+.product-gallery-item:not(:first-child) {
+    grid-column: 1;
+    height: 105px;
+}
+
+.product-gallery-item img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+    object-position: center;
+}
+
+.product-gallery-item:first-child img {
+    max-height: 100%;
+}
+
+/* =========================================
+   BOTÃO DE VISUALIZAÇÃO 3D
+   ========================================= */
+
+.product-3d-cta {
+    margin-top: 16px;
+    padding: 20px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    border: 1px solid #30303b;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #191920, #131319);
+}
+
+.product-3d-cta-text {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    min-width: 0;
+}
+
+.product-3d-icon {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    display: grid;
+    place-items: center;
+    border: 1px solid #48445f;
+    border-radius: 11px;
+    color: #c2bdff;
+    font-size: 28px;
+}
+
+.product-3d-cta-text strong,
+.product-3d-cta-text small {
+    display: block;
+}
+
+.product-3d-cta-text strong {
+    color: #f3f1fb;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.product-3d-cta-text small {
+    margin-top: 4px;
+    color: #9997a8;
+    font-size: 12px;
+}
+
+.btn-view-3d {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 48px;
+    padding: 0 22px;
+    border: 1px solid #c5c0ff;
+    border-radius: 999px;
+    background: #f2f0ff;
+    color: #171622;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
+}
+
+.btn-view-3d:hover {
+    transform: translateY(-2px);
+    background: #fff;
+    box-shadow: 0 8px 28px rgba(153, 144, 255, .18);
+}
+
+.btn-view-3d span {
+    font-size: 20px;
+    line-height: 1;
+}
+
+/* =========================================
+   INFORMAÇÕES DO PRODUTO
+   ========================================= */
+
+.product-details-info {
+    padding: 10px 8px 0 12px;
+}
+
+.product-details-info h1 {
+    margin: 12px 0 12px;
+    color: #f4f3fa;
+    font-size: clamp(28px, 3vw, 42px);
+    line-height: 1.12;
+    letter-spacing: -.7px;
+}
+
+.product-description {
+    max-width: 560px;
+    color: #aaa8b8;
+    font-size: 16px;
+    line-height: 1.7;
+}
+
+.product-price {
+    margin: 28px 0 10px;
+    color: #f4f3fa;
+    font-size: 36px;
+    font-weight: 700;
+}
+
+.product-stock {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 8px 13px;
+    border: 1px solid rgba(74, 222, 128, .25);
+    border-radius: 999px;
+    background: rgba(34, 197, 94, .07);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.product-stock.available {
+    color: #4ade80;
+}
+
+.product-stock.available::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #4ade80;
+    box-shadow: 0 0 10px rgba(74, 222, 128, .5);
+}
+
+.product-stock.unavailable {
+    border-color: rgba(248, 113, 113, .25);
+    background: rgba(248, 113, 113, .07);
+    color: #f87171;
+}
+
+/* =========================================
+   MODAL DA GALERIA DE IMAGENS
+   ========================================= */
+
+.gallery-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(8, 13, 24, .78);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+
+.gallery-modal.active {
+    display: flex;
+}
+
+.gallery-modal-content {
+    position: relative;
+    width: auto;
+    max-width: 90vw;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    background: transparent !important;
+}
+
+.gallery-modal-close {
+    align-self: flex-end;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    font-size: 38px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+/* IMAGEM AMPLIADA */
+
+.gallery-modal-main {
+    width: auto;
+    height: auto;
+    max-width: 90vw;
+    max-height: 75vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.gallery-modal-main img,
+#imagemAmpliada {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 90vw;
+    max-height: 75vh;
+    object-fit: contain;
+    object-position: center;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* MINIATURAS DO MODAL */
+
+.gallery-modal-thumbnails {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    background: transparent !important;
+}
+
+.gallery-modal-thumb {
+    width: 55px;
+    height: 45px;
+    padding: 3px;
+    border: 1px solid #475569;
+    border-radius: 6px;
+    background: transparent !important;
+    cursor: pointer;
+    transition: border-color .2s ease;
+}
+
+.gallery-modal-thumb:hover {
+    border-color: var(--blue);
+}
+
+.gallery-modal-thumb.active {
+    border: 2px solid var(--blue);
+}
+
+.gallery-modal-thumb img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: transparent !important;
+}
+
+/* =========================================
+   VISUALIZADOR 3D — ESTÚDIO MINIMALISTA
+   ========================================= */
+
+.viewer-3d {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    isolation: isolate;
+    border: 1px solid rgba(255, 255, 255, .08);
+    border-radius: 15px;
+    background:
+        radial-gradient(
+            ellipse at 50% 35%,
+            rgba(255, 255, 255, .10) 0%,
+            rgba(220, 220, 235, .045) 34%,
+            rgba(27, 27, 33, 0) 72%
+        ),
+        linear-gradient(145deg, #24242b 0%, #1b1b21 52%, #141419 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .05),
+        0 18px 48px rgba(0, 0, 0, .24);
+}
+
+.viewer-3d canvas {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    outline: none;
+    touch-action: none;
+}
+
+/* CARREGAMENTO 3D */
+
+.viewer-loading {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background:
+        radial-gradient(
+            ellipse at 50% 35%,
+            rgba(255, 255, 255, .10),
+            rgba(27, 27, 33, .97) 72%
+        );
+    color: #f4f3fa;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* INSTRUÇÕES 3D */
+
+.viewer-info {
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    z-index: 3;
+    width: max-content;
+    max-width: calc(100% - 24px);
+    padding: 9px 15px;
+    transform: translateX(-50%);
+    border: 1px solid rgba(255, 255, 255, .14);
+    border-radius: 999px;
+    background: rgba(20, 20, 25, .68);
+    color: #fff;
+    font-size: 12px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    pointer-events: none;
+}
+
+/* =========================================
+   MODAL 3D — VISUAL LIMPO INSPIRADO NA APPLE
+   ========================================= */
+
+.viewer-modal-3d {
+    z-index: 4000;
+    padding: 24px;
+    background: rgba(5, 5, 9, .88);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+}
+
+.viewer-modal-3d .viewer-modal-content {
+    position: relative;
+    width: min(1500px, 96vw);
+    height: min(940px, 92vh);
+    height: min(940px, 92dvh);
+    max-width: none;
+    max-height: none;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 14px;
+    padding: 22px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, .10);
+    border-radius: 24px;
+    background:
+        linear-gradient(145deg, #202027 0%, #15151b 48%, #101014 100%);
+    box-shadow:
+        0 35px 110px rgba(0, 0, 0, .58),
+        inset 0 1px 0 rgba(255, 255, 255, .05);
+}
+
+/* CABEÇALHO DO MODAL */
+
+.viewer-modal-heading {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 2px 2px 12px;
+}
+
+.viewer-heading-info {
+    min-width: 0;
+}
+
+.viewer-modal-kicker {
+    display: block;
+    margin-bottom: 7px;
+    color: #aaa2ff;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+.viewer-modal-heading h2 {
+    margin: 0;
+    color: #f7f7fa;
+    font-size: clamp(19px, 2vw, 25px);
+    font-weight: 600;
+    letter-spacing: -.45px;
+}
+
+.viewer-modal-heading p {
+    margin: 6px 0 0;
+    color: #92919d;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+/* BOTÃO FECHAR DO MODAL */
+
+.viewer-modal-heading .viewer-close {
+    position: static;
+    display: grid;
+    place-items: center;
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    padding: 0 0 3px;
+    border: 1px solid rgba(255, 255, 255, .10);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .07);
+    color: #f5f5f7;
+    font-size: 27px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background .2s ease, transform .2s ease, border-color .2s ease;
+}
+
+.viewer-modal-heading .viewer-close:hover {
+    transform: scale(1.05);
+    border-color: rgba(255, 255, 255, .2);
+    background: rgba(255, 255, 255, .14);
+}
+
+/* ÁREA 3D DENTRO DO MODAL */
+
+.viewer-modal-3d .viewer-3d {
+    position: relative;
+    flex: 1 1 0;
+    width: 100%;
+    height: auto;
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, .08);
+    border-radius: 17px;
+}
+
+/* ESCONDE ELEMENTOS ANTIGOS DO VISUALIZADOR */
+
+.viewer-modal-3d .viewer-3d .viewer-close,
+.viewer-modal-3d .viewer-3d .viewer-expand {
+    display: none;
+}
+
+.viewer-modal-3d .viewer-info {
+    display: none;
+}
+
+/* RODAPÉ DO MODAL */
+
+.viewer-modal-footer {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    padding-top: 3px;
+    color: #aaa9b3;
+    font-size: 12px;
+}
+
+.viewer-modal-footer span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.viewer-control-icon {
+    color: #c4bdff;
+    font-size: 19px;
+    font-style: normal;
+}
+
+/* ESCONDE A ANTIGA ÁREA 3D EM MINIATURA */
+
+.gallery-3d-item,
+.product-3d-section {
+    display: none !important;
+}
+
+/* =========================================
+   RESPONSIVIDADE — TABLETS
+   ========================================= */
+
+@media (max-width: 991px) {
+    .product-details > .row {
+        --bs-gutter-x: 24px;
+    }
+
+    .product-gallery-grid {
+        grid-template-columns: 82px minmax(0, 1fr);
+        gap: 10px;
+    }
+
+    .product-gallery-item:first-child {
+        min-height: 380px;
+    }
+
+    .product-gallery-item:not(:first-child) {
+        height: 88px;
+    }
+
+    .product-3d-cta {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .btn-view-3d {
+        width: 100%;
+    }
+}
+
+/* =========================================
+   RESPONSIVIDADE — CELULARES
+   ========================================= */
+
+@media (max-width: 767px) {
+    .hero {
+        padding: 60px 0;
+        text-align: center;
+    }
+
+    .hero p {
+        margin-right: auto;
+        margin-left: auto;
+    }
+
+    .hero-card {
+        min-height: 210px;
+    }
+
+    .hero-icon {
+        font-size: 85px;
+    }
+
+    .section-title {
+        font-size: 23px;
+    }
+
+    .product-details {
+        padding-top: 25px;
+    }
+
+    .product-details > .row {
+        --bs-gutter-x: 20px;
+        gap: 24px 0;
+    }
+
+    .product-gallery-grid {
+        grid-template-columns: 65px minmax(0, 1fr);
+        grid-template-rows: repeat(4, minmax(75px, auto));
+        gap: 9px;
+    }
+
+    .product-gallery-item:first-child {
+        min-height: 310px;
+    }
+
+    .product-gallery-item:not(:first-child) {
+        height: 75px;
+        min-height: 75px;
+    }
+
+    .product-details-info {
+        padding: 10px 12px 0;
+    }
+
+    .product-details-info h1 {
+        font-size: 29px;
+    }
+
+    .product-price {
+        font-size: 31px;
+    }
+
+    .product-3d-cta {
+        padding: 16px;
+    }
+
+    .product-3d-cta-text strong {
+        font-size: 13px;
+    }
+
+    .product-3d-cta-text small {
+        font-size: 11px;
+    }
+
+    .btn-view-3d {
+        min-height: 46px;
+        font-size: 13px;
+    }
+
+    /* Modal da galeria */
+
+    .gallery-modal {
+        padding: 12px;
+    }
+
+    .gallery-modal-content {
+        max-width: 96vw;
+    }
+
+    .gallery-modal-main,
+    .gallery-modal-main img,
+    #imagemAmpliada {
+        max-width: 96vw;
+        max-height: 65vh;
+    }
+
+    /* Modal 3D */
+
+    .viewer-modal-3d {
+        padding: 10px;
+    }
+
+    .viewer-modal-3d .viewer-modal-content {
+        width: 98vw;
+        height: 88vh;
+        height: 88dvh;
+        max-width: none;
+        max-height: none;
+        padding: 13px;
+        gap: 10px;
+        border-radius: 18px;
+    }
+
+    .viewer-modal-heading {
+        padding-bottom: 8px;
+    }
+
+    .viewer-modal-heading h2 {
+        font-size: 18px;
+    }
+
+    .viewer-modal-heading p {
+        max-width: 260px;
+        font-size: 11px;
+    }
+
+    .viewer-modal-3d .viewer-3d {
+        border-radius: 12px;
+    }
+
+    .viewer-modal-footer {
+        gap: 12px;
+        flex-wrap: wrap;
+        padding-top: 4px;
+        font-size: 11px;
+    }
+
+    footer {
+        margin-top: 55px;
+    }
+}
+
+/* =========================================
+   TELAS MUITO PEQUENAS
+   ========================================= */
+
+@media (max-width: 420px) {
+    .product-gallery-grid {
+        grid-template-columns: 58px minmax(0, 1fr);
+    }
+
+    .product-gallery-item:first-child {
+        min-height: 270px;
+    }
+
+    .product-3d-cta-text {
+        gap: 9px;
+    }
+
+    .product-3d-icon {
+        width: 36px;
+        height: 36px;
+        flex-basis: 36px;
+        font-size: 23px;
+    }
+
+    .viewer-modal-footer {
+        gap: 8px;
+    }
+
+    .viewer-modal-footer span {
+        gap: 5px;
+    }
+}
