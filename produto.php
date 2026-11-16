@@ -58,7 +58,9 @@ if ($produto) {
         'ASUS Notebook' => 'ASUS Laptop-imagem',
         'Samsung 24 Curved Display' => 'Samsung24-imagem',
         'Gigabyte GeForce GTX 1660' => '1660-imagem',
-        'Acer K222HQL' => 'Monitoracer-imagem'
+        'Acer K222HQL' => 'Monitoracer-imagem',
+        'Redragon Lumia 2' => 'lumia2-imagem',
+        'Razer Kraken Pro V2' => 'Krakenv2-imagem'
     ];
 
     $nomeProduto = $produto['nome'];

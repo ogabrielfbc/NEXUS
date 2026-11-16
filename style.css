@@ -255,7 +255,7 @@ body {
 }
 
 .btn-product:hover {
-    background: var(--blue);
+    background: c;
     color: #08111e;
 }
 
@@ -1104,5 +1104,187 @@ footer p {
 
     .viewer-modal-footer span {
         gap: 5px;
+    }
+}
+/* =========================================
+   Filtro
+   ========================================= */
+ 
+   /* ==========================================
+   MODAL DE FILTROS
+========================================== */
+
+.modal-filtro {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.65);
+
+    backdrop-filter: blur(5px);
+}
+
+/* MODAL ABERTO */
+
+.modal-filtro.ativo {
+    display: flex;
+}
+
+/* CONTEÚDO DO MODAL */
+
+.conteudo-filtro {
+    width: 100%;
+    max-width: 480px;
+
+    padding: 28px;
+
+    background: linear-gradient(120deg, #080d18, #10213c);
+    border-radius: 20px;
+
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+
+    animation: aparecerFiltro .25s ease;
+}
+
+/* ANIMAÇÃO */
+
+@keyframes aparecerFiltro {
+    from {
+        opacity: 0;
+        transform: translateY(15px) scale(.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* CABEÇALHO */
+
+.topo-filtro {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 25px;
+}
+
+.topo-filtro h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+/* BOTÃO FECHAR */
+
+.fechar-filtro {
+    border: none;
+    background: transparent;
+
+    font-size: 30px;
+    color: #777;
+
+    cursor: pointer;
+}
+
+/* CAMPOS */
+
+.opcoes-filtro {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.campo-filtro {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.campo-filtro label {
+    font-size: 14px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.campo-filtro input,
+.campo-filtro select {
+    width: 100%;
+    min-height: 46px;
+
+    padding: 0 14px;
+
+    border: 1px solid #dedce8;
+    border-radius: 10px;
+
+    background: #fff;
+    color: #171622;
+
+    outline: none;
+}
+
+.campo-filtro input:focus,
+.campo-filtro select:focus {
+    border-color: #9b8cff;
+    box-shadow: 0 0 0 3px rgba(155, 140, 255, 0.15);
+}
+
+/* AÇÕES */
+
+.acoes-filtro {
+    display: flex;
+    gap: 12px;
+    margin-top: 28px;
+}
+
+.btn-limpar-filtro,
+.btn-aplicar-filtro {
+    flex: 1;
+    min-height: 46px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 700;
+
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.btn-limpar-filtro {
+    border: 1px solid #dedce8;
+    background: #fff;
+    color: #333;
+}
+
+.btn-aplicar-filtro {
+    border: 1px solid #c5c0ff;
+    background: #f2f0ff;
+    color: #171622;
+}
+
+.btn-aplicar-filtro:hover {
+    background: #e7e3ff;
+}
+
+/* RESPONSIVIDADE */
+
+@media (max-width: 480px) {
+    .conteudo-filtro {
+        padding: 22px;
+    }
+
+    .acoes-filtro {
+        flex-direction: column;
     }
 }
