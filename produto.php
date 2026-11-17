@@ -1,3 +1,4 @@
+
 <?php
 
 $pdo = require __DIR__ . '/config/database.php';
@@ -9,9 +10,11 @@ $erro = null;
 $temModelo3D = false;
 $imagensGaleria = [];
 
+// Busca o produto
+
 if ($id === false || $id === null || $id < 1) {
     http_response_code(400);
-    $erro = "Identificação de produto inválida.";
+    $erro = 'Identificação de produto inválida.';
 } else {
     $sql = "SELECT
                 id,
@@ -34,14 +37,14 @@ if ($id === false || $id === null || $id < 1) {
 
     if (!$produto) {
         http_response_code(404);
-        $erro = "Produto não encontrado.";
+        $erro = 'Produto não encontrado.';
     }
 }
 
-// CONFIGURAÇÕES DO PRODUTO
+// Configurações do produto
 
 if ($produto) {
-    $temModelo3D = !empty($produto['modelo_3d']);
+    $temModelo3D = trim((string) $produto['modelo_3d']) !== '';
 
     $pastasGaleria = [
         'PlayStation 4' => 'ps4-imagem',
@@ -117,6 +120,8 @@ if ($produto) {
 
     <main class="container product-details">
 
+        <!-- Voltar -->
+
         <button
             type="button"
             class="btn-voltar-loja"
@@ -135,7 +140,7 @@ if ($produto) {
 
             <div class="row mt-4">
 
-                <!-- GALERIA -->
+                <!-- Galeria -->
 
                 <div class="col-md-6">
 
@@ -191,7 +196,7 @@ if ($produto) {
 
                 </div>
 
-                <!-- PRODUTO -->
+                <!-- Informações do produto -->
 
                 <div class="col-md-6 product-details-info">
 
@@ -222,8 +227,7 @@ if ($produto) {
 
     </main>
 
-
-    <!-- MODAL DA GALERIA -->
+    <!-- Modal da galeria -->
 
     <?php if ($produto && !empty($imagensGaleria)): ?>
 
@@ -256,6 +260,7 @@ if ($produto) {
                             type="button"
                             class="gallery-modal-thumb <?= $indice === 0 ? 'active' : '' ?>"
                             onclick="selecionarImagem(<?= $indice ?>)"
+                            aria-label="Selecionar imagem <?= $indice + 1 ?>"
                         >
                             <img
                                 src="<?= htmlspecialchars($imagem) ?>"
@@ -279,18 +284,23 @@ if ($produto) {
 
             let imagemAtual = 0;
 
+            const modalGaleria = document.getElementById('galleryModal');
+            const imagemAmpliada = document.getElementById('imagemAmpliada');
+
             function abrirGaleria(indice) {
                 imagemAtual = indice;
                 atualizarGaleria();
 
-                document.getElementById('galleryModal').classList.add('active');
+                modalGaleria.classList.add('active');
                 document.body.style.overflow = 'hidden';
             }
 
             function fecharGaleria() {
-                document.getElementById('galleryModal').classList.remove('active');
+                modalGaleria.classList.remove('active');
 
-                if (!document.getElementById('viewerModal3D')?.classList.contains('active')) {
+                const modal3D = document.getElementById('viewerModal3D');
+
+                if (!modal3D?.classList.contains('active')) {
                     document.body.style.overflow = '';
                 }
             }
@@ -301,24 +311,25 @@ if ($produto) {
             }
 
             function atualizarGaleria() {
-                document.getElementById('imagemAmpliada').src = imagensProduto[imagemAtual];
+                imagemAmpliada.src = imagensProduto[imagemAtual];
 
                 document.querySelectorAll('.gallery-modal-thumb').forEach(
                     function(miniatura, indice) {
-                        miniatura.classList.toggle('active', indice === imagemAtual);
+                        miniatura.classList.toggle(
+                            'active',
+                            indice === imagemAtual
+                        );
                     }
                 );
             }
 
-            document.getElementById('galleryModal').addEventListener('click', function(event) {
-                if (event.target === this) {
+            modalGaleria.addEventListener('click', function(event) {
+                if (event.target === modalGaleria) {
                     fecharGaleria();
                 }
             });
 
             document.addEventListener('keydown', function(event) {
-                const modalGaleria = document.getElementById('galleryModal');
-
                 if (!modalGaleria.classList.contains('active')) {
                     return;
                 }
@@ -341,15 +352,17 @@ if ($produto) {
 
     <?php endif; ?>
 
+    <!-- Modal 3D -->
 
     <?php if ($temModelo3D): ?>
-
-        <!-- MODAL 3D -->
 
         <div
             class="gallery-modal viewer-modal-3d"
             id="viewerModal3D"
             aria-hidden="true"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Visualizador 3D do produto"
         >
 
             <div class="viewer-modal-content">
@@ -405,8 +418,7 @@ if ($produto) {
 
     <?php endif; ?>
 
-
-    <!-- THREE.JS -->
+    <!-- Three.js -->
 
     <?php if ($temModelo3D): ?>
 
@@ -422,15 +434,13 @@ if ($produto) {
             import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
             import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 
-            // 1. ELEMENTOS
+            // Elementos
 
             const areaVisualizador = document.getElementById('viewer3D');
             const carregamento = document.getElementById('loading3D');
             const botaoAbrir = document.getElementById('abrir3D');
             const botaoFechar = document.getElementById('fechar3D');
             const modal3D = document.getElementById('viewerModal3D');
-
-            let carregamentoIniciado = false;
 
             const modelo3DUrl = <?= json_encode(
                 $produto['modelo_3d'],
@@ -441,7 +451,12 @@ if ($produto) {
                 throw new Error('Visualizador 3D não encontrado.');
             }
 
-            // 2. FUNDO
+            let carregamentoIniciado = false;
+            let modeloCarregado = false;
+            let animacaoAtiva = false;
+            let quadroAnimacao = null;
+
+            // Cena
 
             const cena = new THREE.Scene();
 
@@ -452,15 +467,14 @@ if ($produto) {
             const contextoFundo = telaFundo.getContext('2d');
 
             const gradienteFundo = contextoFundo.createRadialGradient(
-                 256, 256, 10,
+                256, 256, 10,
                 256, 256, 440
             );
 
-            
-gradienteFundo.addColorStop(0, '#777783');
-gradienteFundo.addColorStop(0.35, '#484852');
-gradienteFundo.addColorStop(0.7, '#32323c');
-gradienteFundo.addColorStop(1, '#292930');
+            gradienteFundo.addColorStop(0, '#777783');
+            gradienteFundo.addColorStop(0.35, '#484852');
+            gradienteFundo.addColorStop(0.7, '#32323c');
+            gradienteFundo.addColorStop(1, '#292930');
 
             contextoFundo.fillStyle = gradienteFundo;
             contextoFundo.fillRect(0, 0, 512, 512);
@@ -470,11 +484,11 @@ gradienteFundo.addColorStop(1, '#292930');
 
             cena.background = texturaFundo;
 
-            // 3. CÂMERA
+            // Câmera
 
             const camera = new THREE.PerspectiveCamera(35, 1, 0.01, 100);
 
-            // 4. RENDERIZADOR
+            // Renderizador
 
             const renderizador = new THREE.WebGLRenderer({
                 antialias: true,
@@ -482,7 +496,10 @@ gradienteFundo.addColorStop(1, '#292930');
                 powerPreference: 'high-performance'
             });
 
-            renderizador.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+            renderizador.setPixelRatio(
+                Math.min(window.devicePixelRatio || 1, 1.5)
+            );
+
             renderizador.outputColorSpace = THREE.SRGBColorSpace;
             renderizador.toneMapping = THREE.NoToneMapping;
             renderizador.shadowMap.enabled = true;
@@ -495,7 +512,7 @@ gradienteFundo.addColorStop(1, '#292930');
 
             areaVisualizador.appendChild(renderizador.domElement);
 
-            // 5. BLOOM
+            // Efeito de brilho
 
             const BLOOM_SCENE = 1;
 
@@ -504,8 +521,9 @@ gradienteFundo.addColorStop(1, '#292930');
 
             const compositorBloom = new EffectComposer(renderizador);
 
-            const passeRenderBloom = new RenderPass(cena, cameraBloom);
-            compositorBloom.addPass(passeRenderBloom);
+            compositorBloom.addPass(
+                new RenderPass(cena, cameraBloom)
+            );
 
             const bloomPass = new UnrealBloomPass(
                 new THREE.Vector2(1, 1),
@@ -518,8 +536,9 @@ gradienteFundo.addColorStop(1, '#292930');
 
             const compositorFinal = new EffectComposer(renderizador);
 
-            const passeRenderFinal = new RenderPass(cena, camera);
-            compositorFinal.addPass(passeRenderFinal);
+            compositorFinal.addPass(
+                new RenderPass(cena, camera)
+            );
 
             const passeCombinacao = new ShaderPass({
                 uniforms: {
@@ -555,7 +574,7 @@ gradienteFundo.addColorStop(1, '#292930');
 
             compositorFinal.addPass(passeCombinacao);
 
-            // 6. AMBIENTE
+            // Ambiente
 
             const geradorAmbiente = new THREE.PMREMGenerator(renderizador);
             const ambienteSala = new RoomEnvironment();
@@ -568,7 +587,7 @@ gradienteFundo.addColorStop(1, '#292930');
             ambienteSala.dispose();
             geradorAmbiente.dispose();
 
-            // 7. ILUMINAÇÃO
+            // Iluminação
 
             const luzAmbiente = new THREE.HemisphereLight(
                 0xffffff,
@@ -596,7 +615,10 @@ gradienteFundo.addColorStop(1, '#292930');
 
             cena.add(luzPrincipal);
 
-            const luzPreenchimento = new THREE.DirectionalLight(0xe8edff, 0.55);
+            const luzPreenchimento = new THREE.DirectionalLight(
+                0xe8edff,
+                0.55
+            );
 
             luzPreenchimento.position.set(-5, 3, 4);
             cena.add(luzPreenchimento);
@@ -606,8 +628,7 @@ gradienteFundo.addColorStop(1, '#292930');
             luzSuperior.position.set(0, 8, -1);
             cena.add(luzSuperior);
 
-
-            // 8. CHÃO
+            // Chão
 
             const materialBasePiso = new THREE.MeshStandardMaterial({
                 color: 0x92929E,
@@ -641,8 +662,7 @@ gradienteFundo.addColorStop(1, '#292930');
 
             cena.add(piso);
 
-
-            // 9. MEIA-LUA
+            // Iluminação de contorno
 
             const grupoMeiaLua = new THREE.Group();
 
@@ -729,9 +749,12 @@ gradienteFundo.addColorStop(1, '#292930');
 
             cena.add(grupoMeiaLua);
 
-            // 10. CONTROLES
+            // Controles
 
-            const controles = new OrbitControls(camera, renderizador.domElement);
+            const controles = new OrbitControls(
+                camera,
+                renderizador.domElement
+            );
 
             controles.enableDamping = true;
             controles.dampingFactor = 0.055;
@@ -745,7 +768,7 @@ gradienteFundo.addColorStop(1, '#292930');
             controles.minDistance = 0.5;
             controles.maxDistance = 20;
 
-            // 11. TAMANHO
+            // Redimensionamento
 
             function ajustarTamanhoVisualizador() {
                 const largura = areaVisualizador.clientWidth;
@@ -766,7 +789,58 @@ gradienteFundo.addColorStop(1, '#292930');
                 compositorFinal.setSize(largura, altura);
             }
 
-            // 12. MODAL 3D
+            // Animação
+
+            function animarVisualizador() {
+                if (!modal3D.classList.contains('active')) {
+                    animacaoAtiva = false;
+                    quadroAnimacao = null;
+                    return;
+                }
+
+                quadroAnimacao = requestAnimationFrame(animarVisualizador);
+
+                controles.update();
+
+                cameraBloom.position.copy(camera.position);
+                cameraBloom.quaternion.copy(camera.quaternion);
+                cameraBloom.projectionMatrix.copy(camera.projectionMatrix);
+                cameraBloom.projectionMatrixInverse.copy(
+                    camera.projectionMatrixInverse
+                );
+
+                const fundoOriginal = cena.background;
+
+                cena.background = null;
+
+                try {
+                    compositorBloom.render();
+                } finally {
+                    cena.background = fundoOriginal;
+                }
+
+                compositorFinal.render();
+            }
+
+            function iniciarAnimacao() {
+                if (animacaoAtiva) {
+                    return;
+                }
+
+                animacaoAtiva = true;
+                quadroAnimacao = requestAnimationFrame(animarVisualizador);
+            }
+
+            function pararAnimacao() {
+                if (quadroAnimacao !== null) {
+                    cancelAnimationFrame(quadroAnimacao);
+                    quadroAnimacao = null;
+                }
+
+                animacaoAtiva = false;
+            }
+
+            // Modal 3D
 
             function abrirVisualizador3D() {
                 modal3D.classList.add('active');
@@ -781,6 +855,7 @@ gradienteFundo.addColorStop(1, '#292930');
                     requestAnimationFrame(() => {
                         ajustarTamanhoVisualizador();
                         carregarModelo3D();
+                        iniciarAnimacao();
                     });
                 });
             }
@@ -789,7 +864,14 @@ gradienteFundo.addColorStop(1, '#292930');
                 modal3D.classList.remove('active');
                 modal3D.setAttribute('aria-hidden', 'true');
 
-                document.body.style.overflow = '';
+                pararAnimacao();
+
+                const galeriaAberta = document.getElementById('galleryModal')
+                    ?.classList.contains('active');
+
+                if (!galeriaAberta) {
+                    document.body.style.overflow = '';
+                }
             }
 
             botaoAbrir.addEventListener('click', abrirVisualizador3D);
@@ -802,17 +884,20 @@ gradienteFundo.addColorStop(1, '#292930');
             });
 
             document.addEventListener('keydown', function(event) {
-                if (event.key === 'Escape' && modal3D.classList.contains('active')) {
+                if (
+                    event.key === 'Escape' &&
+                    modal3D.classList.contains('active')
+                ) {
                     fecharVisualizador3D();
                 }
             });
 
-            // 13. CARREGAMENTO DO MODELO
+            // Carregamento do modelo
 
             const carregadorModelo = new GLTFLoader();
 
             function carregarModelo3D() {
-                if (carregamentoIniciado) {
+                if (carregamentoIniciado || modeloCarregado) {
                     return;
                 }
 
@@ -833,7 +918,7 @@ gradienteFundo.addColorStop(1, '#292930');
                             objeto.receiveShadow = true;
                         });
 
-                        // 14. ESCALA E CENTRALIZAÇÃO
+                        // Escala e centralização
 
                         modelo.updateMatrixWorld(true);
 
@@ -849,7 +934,10 @@ gradienteFundo.addColorStop(1, '#292930');
                             tamanhoOriginal.z
                         );
 
-                        if (!Number.isFinite(maiorDimensao) || maiorDimensao <= 0) {
+                        if (
+                            !Number.isFinite(maiorDimensao) ||
+                            maiorDimensao <= 0
+                        ) {
                             carregamento.textContent = 'Modelo 3D inválido.';
                             carregamentoIniciado = false;
                             return;
@@ -876,7 +964,7 @@ gradienteFundo.addColorStop(1, '#292930');
 
                         modelo.updateMatrixWorld(true);
 
-                        // 15. DIMENSÕES
+                        // Dimensões
 
                         const caixaFinal = new THREE.Box3().setFromObject(modelo);
 
@@ -890,7 +978,7 @@ gradienteFundo.addColorStop(1, '#292930');
 
                         const raioModelo = Math.max(esferaModelo.radius, 0.1);
 
-                        // 16. CÂMERA
+                        // Câmera
 
                         const campoVertical = THREE.MathUtils.degToRad(camera.fov);
 
@@ -919,8 +1007,6 @@ gradienteFundo.addColorStop(1, '#292930');
 
                         camera.updateProjectionMatrix();
 
-                        camera.updateProjectionMatrix();
-
                         controles.minDistance = Math.max(
                             0.25,
                             distanciaCamera * 0.35
@@ -930,7 +1016,7 @@ gradienteFundo.addColorStop(1, '#292930');
 
                         controles.update();
 
-                        // 17. POSICIONAMENTO
+                        // Posicionamento do cenário
 
                         const alturaChao = caixaFinal.min.y;
 
@@ -939,8 +1025,9 @@ gradienteFundo.addColorStop(1, '#292930');
 
                         grupoMeiaLua.position.y = alturaChao + 0.002;
 
-                        // 18. FINALIZAÇÃO
+                        // Finalização
 
+                        modeloCarregado = true;
                         carregamento.style.display = 'none';
 
                         ajustarTamanhoVisualizador();
@@ -970,7 +1057,7 @@ gradienteFundo.addColorStop(1, '#292930');
                 );
             }
 
-            // 19. REDIMENSIONAMENTO
+            // Monitoramento do tamanho
 
             const observadorTamanho = new ResizeObserver(function() {
                 ajustarTamanhoVisualizador();
@@ -978,40 +1065,10 @@ gradienteFundo.addColorStop(1, '#292930');
 
             observadorTamanho.observe(areaVisualizador);
 
-            window.addEventListener('resize', ajustarTamanhoVisualizador);
-
-            // 20. ANIMAÇÃO
-
-            function animarVisualizador() {
-                requestAnimationFrame(animarVisualizador);
-
-                if (!modal3D.classList.contains('active')) {
-                    return;
-                }
-
-                controles.update();
-
-                cameraBloom.position.copy(camera.position);
-                cameraBloom.quaternion.copy(camera.quaternion);
-                cameraBloom.projectionMatrix.copy(camera.projectionMatrix);
-                cameraBloom.projectionMatrixInverse.copy(
-                    camera.projectionMatrixInverse
-                );
-
-                const fundoOriginal = cena.background;
-
-                cena.background = null;
-
-                try {
-                    compositorBloom.render();
-                } finally {
-                    cena.background = fundoOriginal;
-                }
-
-                compositorFinal.render();
-            }
-
-            animarVisualizador();
+            window.addEventListener(
+                'resize',
+                ajustarTamanhoVisualizador
+            );
 
         </script>
 
