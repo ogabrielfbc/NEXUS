@@ -89,7 +89,6 @@ nexus-tech/
 http://localhost/nexus-tech/
 ```
 
-> **Importante:** o arquivo `.env` contém configurações privadas e não deve ser enviado ao GitHub.
 
 ## 📌 Próximas etapas
 
