@@ -1,7 +1,19 @@
 
 <?php
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 $pdo = require __DIR__ . '/config/database.php';
+
+if (!isset($_SESSION['carrinho'])) {
+    $_SESSION['carrinho'] = [];
+}
+
+if (empty($_SESSION['token_carrinho'])) {
+    $_SESSION['token_carrinho'] = bin2hex(random_bytes(32));
+}
 
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 
@@ -84,6 +96,57 @@ if ($produto) {
         $imagensGaleria[] = $produto['imagem'];
     }
 }
+// Adicionar produto ao carrinho
+
+// Adicionar produto ao carrinho
+
+if (
+    $produto &&
+    $_SERVER['REQUEST_METHOD'] === 'POST' &&
+    isset($_POST['adicionar_carrinho'])
+) {
+
+    $token = $_POST['token_carrinho'] ?? '';
+
+    if (!hash_equals($_SESSION['token_carrinho'], $token)) {
+
+        $_SESSION['mensagem_carrinho'] = 'Solicitação inválida. Tente novamente.';
+
+    } else {
+
+        $quantidade = filter_input(INPUT_POST, 'quantidade', FILTER_VALIDATE_INT);
+
+        if (!$produto || $quantidade === false || $quantidade === null || $quantidade < 1) {
+
+            $_SESSION['mensagem_carrinho'] = 'Quantidade inválida.';
+
+        } elseif ($produto['estoque'] < 1) {
+
+            $_SESSION['mensagem_carrinho'] = 'Produto sem estoque disponível.';
+
+        } else {
+
+            $idProduto = (int) $produto['id'];
+
+            $quantidadeAtual = $_SESSION['carrinho'][$idProduto] ?? 0;
+            $novaQuantidade = $quantidadeAtual + $quantidade;
+
+            if ($novaQuantidade > $produto['estoque']) {
+
+                $_SESSION['mensagem_carrinho'] = 'Quantidade maior que o estoque disponível.';
+
+            } else {
+
+                $_SESSION['carrinho'][$idProduto] = $novaQuantidade;
+
+                $_SESSION['mensagem_carrinho'] = 'Produto adicionado ao carrinho com sucesso!';
+            }
+        }
+    }
+
+    header('Location: produto.php?id=' . $id);
+    exit;
+}
 
 ?>
 
@@ -105,6 +168,49 @@ if ($produto) {
     >
 
     <link rel="stylesheet" href="style.css">
+    <style>
+    .controle-quantidade-produto {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .botao-quantidade-produto {
+        width: 42px;
+        height: 42px;
+        border: 1px solid #29496e;
+        background: #142640;
+        color: #45b2ff;
+        border-radius: 8px;
+        font-size: 23px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: .2s;
+    }
+
+    .botao-quantidade-produto:hover {
+        background: #1685d5;
+        color: white;
+    }
+
+    .campo-quantidade-produto {
+        width: 55px;
+        text-align: center;
+        font-size: 18px;
+        font-weight: bold;
+        color: white;
+        background: #101a2c;
+        border: 1px solid #29496e;
+        border-radius: 8px;
+        padding: 8px 4px;
+    }
+
+    .campo-quantidade-produto:focus {
+        outline: none;
+        border-color: #35aaff;
+    }
+</style>
 
     <script type="importmap">
     {
@@ -218,12 +324,86 @@ if ($produto) {
                             — <?= (int) $produto['estoque'] ?> unidades
                         <?php endif; ?>
                     </p>
+                    <?php if (isset($_SESSION['mensagem_carrinho'])): ?>
+
+    <div class="alert alert-info mt-3">
+        <?= htmlspecialchars($_SESSION['mensagem_carrinho']) ?>
+    </div>
+
+    <?php unset($_SESSION['mensagem_carrinho']); ?>
+
+<?php endif; ?>
+
+<?php if ($produto['estoque'] > 0): ?>
+
+    <form method="POST" class="mt-4">
+
+        <input
+            type="hidden"
+            name="token_carrinho"
+            value="<?= htmlspecialchars($_SESSION['token_carrinho']) ?>"
+        >
+
+       <label class="form-label">
+    Quantidade
+</label>
+
+<div class="controle-quantidade-produto">
+
+    <button
+        type="button"
+        class="botao-quantidade-produto"
+        onclick="alterarQuantidade(-1)"
+    >
+        −
+    </button>
+
+    <input
+        type="number"
+        name="quantidade"
+        id="quantidade"
+        class="campo-quantidade-produto"
+        value="1"
+        min="1"
+        max="<?= (int) $produto['estoque'] ?>"
+        required
+    >
+
+    <button
+        type="button"
+        class="botao-quantidade-produto"
+        onclick="alterarQuantidade(1)"
+    >
+        +
+    </button>
+
+</div>
+
+        <button
+            type="submit"
+            name="adicionar_carrinho"
+            class="btn btn-primary"
+        >
+            Adicionar ao carrinho
+        </button>
+
+    </form>
+
+<?php else: ?>
+
+    <button class="btn btn-secondary mt-3" disabled>
+        Produto esgotado
+    </button>
+
+<?php endif; ?>
 
                 </div>
 
             </div>
 
         <?php endif; ?>
+
+        
 
     </main>
 
@@ -1073,6 +1253,28 @@ if ($produto) {
         </script>
 
     <?php endif; ?>
+    <script>
+    function alterarQuantidade(valor) {
+
+        const campo = document.getElementById('quantidade');
+
+        const quantidadeAtual = parseInt(campo.value) || 1;
+        const quantidadeMinima = parseInt(campo.min);
+        const quantidadeMaxima = parseInt(campo.max);
+
+        let novaQuantidade = quantidadeAtual + valor;
+
+        if (novaQuantidade < quantidadeMinima) {
+            novaQuantidade = quantidadeMinima;
+        }
+
+        if (novaQuantidade > quantidadeMaxima) {
+            novaQuantidade = quantidadeMaxima;
+        }
+
+        campo.value = novaQuantidade;
+    }
+</script>
 
 </body>
 </html>

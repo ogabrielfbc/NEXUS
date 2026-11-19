@@ -1,7 +1,19 @@
 
 <?php
 
+session_start();
+
 $pdo = require __DIR__ . '/config/database.php';
+
+$clienteLogado = (
+    isset($_SESSION['usuario_id']) &&
+    isset($_SESSION['usuario_tipo']) &&
+    $_SESSION['usuario_tipo'] === 'cliente'
+);
+
+$nomeCliente = $clienteLogado
+    ? $_SESSION['usuario_nome']
+    : '';
 
 ?>
 
@@ -78,11 +90,29 @@ $pdo = require __DIR__ . '/config/database.php';
                         </a>
                     </li>
 
-                    <li class="nav-item">
-                        <a class="nav-link home-account" href="login.php">
-                            Minha conta
-                        </a>
-                    </li>
+                    <?php if ($clienteLogado): ?>
+
+                        <li class="nav-item">
+                            <a class="nav-link home-account" href="cliente/minha_conta.php">
+                                Olá, <?= htmlspecialchars($nomeCliente) ?>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="cliente/sair.php">
+                                Sair
+                            </a>
+                        </li>
+
+                    <?php else: ?>
+
+                        <li class="nav-item">
+                            <a class="nav-link home-account" href="cliente/login.php">
+                                Minha conta
+                            </a>
+                        </li>
+
+                    <?php endif; ?>
 
                 </ul>
 
