@@ -1,5 +1,8 @@
 
 <?php
+if (empty($_SESSION['token_carrinho'])) {
+    $_SESSION['token_carrinho'] = bin2hex(random_bytes(32));
+}
 
 $sqlDestaques = "SELECT
                     p.id,
@@ -120,12 +123,42 @@ $produtosDestaque = $pdo->query($sqlDestaques)->fetchAll();
                                     R$ <?= number_format((float) $produto['preco'], 2, ',', '.') ?>
                                 </h4>
 
-                                <a
-                                    href="produto.php?id=<?= (int) $produto['id'] ?>"
-                                    class="btn-product"
-                                >
-                                    Ver detalhes
-                                </a>
+                               <div class="botoes-produto">
+
+    <form action="adicionar_carrinho.php" method="POST">
+
+        <input
+            type="hidden"
+            name="id"
+            value="<?= (int) $produto['id'] ?>"
+        >
+
+        <input
+            type="hidden"
+            name="token_carrinho"
+            value="<?= htmlspecialchars($_SESSION['token_carrinho'], ENT_QUOTES, 'UTF-8') ?>"
+        >
+
+        <button
+            type="submit"
+            name="acao"
+            value="adicionar"
+            class="btn-product"
+        >
+            Adicionar ao carrinho
+        </button>
+
+
+    </form>
+
+    <a
+        href="produto.php?id=<?= (int) $produto['id'] ?>"
+        class="btn-product"
+    >
+        Ver detalhes
+    </a>
+
+</div>
 
                             </div>
 

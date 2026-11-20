@@ -13,12 +13,30 @@ if ($config === false) {
     throw new RuntimeException('Erro ao ler o arquivo .env.');
 }
 
+// Verifica se todas as configurações existem
+$camposObrigatorios = [
+    'DB_HOST',
+    'DB_PORT',
+    'DB_NAME',
+    'DB_USER',
+    'DB_PASSWORD'
+];
+
+foreach ($camposObrigatorios as $campo) {
+
+    if (!array_key_exists($campo, $config) || $config[$campo] === '') {
+
+        if ($campo !== 'DB_PASSWORD') {
+            throw new RuntimeException("Configuração obrigatória ausente: $campo.");
+        }
+    }
+}
+
 $host = $config['DB_HOST'];
 $porta = $config['DB_PORT'];
 $banco = $config['DB_NAME'];
 $usuario = $config['DB_USER'];
-$senha = $config['DB_PASSWORD'];
-
+$senha = $config['DB_PASSWORD'] ?? '';
 
 $dsn = "mysql:host=$host;port=$porta;dbname=$banco;charset=utf8mb4";
 

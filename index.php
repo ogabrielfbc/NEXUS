@@ -40,7 +40,7 @@ $nomeCliente = $clienteLogado
 
 <body>
 
-    <!-- Menu -->
+    <!-- MENU -->
 
     <nav class="navbar navbar-expand-lg navbar-dark home-navbar">
 
@@ -123,7 +123,7 @@ $nomeCliente = $clienteLogado
     </nav>
 
 
-    <!-- Banner principal -->
+    <!-- BANNER PRINCIPAL -->
 
     <section class="home-hero">
 
@@ -172,18 +172,33 @@ $nomeCliente = $clienteLogado
 
                         <div class="home-visual-glow"></div>
 
-                        <div class="home-visual-icon">
-                            🎧
+                        <div class="home-visual-painel">
+
+                            <div class="home-visual-orbita"></div>
+
+                            <div class="home-visual-letra">
+                                N
+                            </div>
+
+                            <div class="home-visual-detalhe">
+                                NEXUS TECH
+                            </div>
+
                         </div>
 
-                        <div class="home-visual-label">
-                            <span>SEU SETUP</span>
-                            <strong>COMEÇA AQUI.</strong>
-                        </div>
+                        <div class="home-etiqueta-flutuante">
 
-                        <div class="home-floating-card">
                             <span>✦</span>
-                            Tecnologia para você
+
+                            <div>
+                                <strong>TECNOLOGIA</strong>
+                                <small>Para ir além.</small>
+                            </div>
+
+                        </div>
+
+                        <div class="home-etiqueta-superior">
+                            PERFORMANCE • INOVAÇÃO
                         </div>
 
                     </div>
@@ -197,7 +212,7 @@ $nomeCliente = $clienteLogado
     </section>
 
 
-    <!-- Categorias -->
+    <!-- CATEGORIAS -->
 
     <section class="container home-categories" id="categorias">
 
@@ -279,12 +294,12 @@ $nomeCliente = $clienteLogado
     </section>
 
 
-    <!-- Produtos em destaque -->
+    <!-- PRODUTOS EM DESTAQUE -->
 
     <?php include __DIR__ . '/produto2.php'; ?>
 
 
-    <!-- Rodapé -->
+    <!-- RODAPÉ -->
 
     <footer class="home-footer">
 
@@ -323,7 +338,7 @@ $nomeCliente = $clienteLogado
     </footer>
 
 
-    <!-- Bootstrap JS -->
+    <!-- BOOTSTRAP JS -->
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 

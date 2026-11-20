@@ -31,6 +31,25 @@ $totalClientes = $pdo->query("
     WHERE tipo = 'cliente'
 ")->fetchColumn();
 
+// Conta os cupons cadastrados
+$totalCupons = $pdo->query("
+    SELECT COUNT(*)
+    FROM cupons
+")->fetchColumn();
+
+// Conta as avaliações recebidas
+$totalAvaliacoes = $pdo->query("
+    SELECT COUNT(*)
+    FROM avaliacoes
+")->fetchColumn();
+
+// Conta os pedidos pendentes
+$pedidosPendentes = $pdo->query("
+    SELECT COUNT(*)
+    FROM pedidos
+    WHERE status = 'pendente'
+")->fetchColumn();
+
 $nomeAdministrador = $_SESSION['usuario_nome'] ?? 'Administrador';
 
 ?>
@@ -39,12 +58,14 @@ $nomeAdministrador = $_SESSION['usuario_nome'] ?? 'Administrador';
 <html lang="pt-BR">
 
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Painel Administrativo | NEXUS</title>
 
     <style>
+
         * {
             margin: 0;
             padding: 0;
@@ -119,7 +140,7 @@ $nomeAdministrador = $_SESSION['usuario_nome'] ?? 'Administrador';
 
         .cartoes {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 20px;
         }
 
@@ -128,6 +149,12 @@ $nomeAdministrador = $_SESSION['usuario_nome'] ?? 'Administrador';
             border: 1px solid #243651;
             border-radius: 12px;
             padding: 25px;
+            transition: 0.3s;
+        }
+
+        .cartao:hover {
+            border-color: #168bff;
+            transform: translateY(-3px);
         }
 
         .cartao h3 {
@@ -160,12 +187,15 @@ $nomeAdministrador = $_SESSION['usuario_nome'] ?? 'Administrador';
         }
 
         @media (max-width: 1000px) {
+
             .cartoes {
                 grid-template-columns: repeat(2, 1fr);
             }
+
         }
 
         @media (max-width: 650px) {
+
             .menu-lateral {
                 position: relative;
                 width: 100%;
@@ -189,8 +219,11 @@ $nomeAdministrador = $_SESSION['usuario_nome'] ?? 'Administrador';
                 align-items: flex-start;
                 flex-direction: column;
             }
+
         }
+
     </style>
+
 </head>
 
 <body>
@@ -203,6 +236,8 @@ $nomeAdministrador = $_SESSION['usuario_nome'] ?? 'Administrador';
         <a href="produtos.php">Produtos</a>
         <a href="pedidos.php">Pedidos</a>
         <a href="clientes.php">Clientes</a>
+        <a href="cupons.php">Cupons</a>
+        <a href="avaliacoes.php">Avaliações</a>
         <a href="../index.php">Voltar para a loja</a>
 
     </aside>
@@ -212,8 +247,13 @@ $nomeAdministrador = $_SESSION['usuario_nome'] ?? 'Administrador';
         <header class="cabecalho">
 
             <div>
+
                 <h1>Painel administrativo</h1>
-                <p>Bem-vindo, <?= htmlspecialchars($nomeAdministrador) ?>.</p>
+
+                <p>
+                    Bem-vindo, <?= htmlspecialchars($nomeAdministrador) ?>.
+                </p>
+
             </div>
 
             <a href="sair.php" class="sair">Sair da conta</a>
@@ -238,8 +278,23 @@ $nomeAdministrador = $_SESSION['usuario_nome'] ?? 'Administrador';
             </div>
 
             <div class="cartao">
+                <h3>Pedidos pendentes</h3>
+                <strong><?= $pedidosPendentes ?></strong>
+            </div>
+
+            <div class="cartao">
                 <h3>Clientes cadastrados</h3>
                 <strong><?= $totalClientes ?></strong>
+            </div>
+
+            <div class="cartao">
+                <h3>Cupons cadastrados</h3>
+                <strong><?= $totalCupons ?></strong>
+            </div>
+
+            <div class="cartao">
+                <h3>Avaliações recebidas</h3>
+                <strong><?= $totalAvaliacoes ?></strong>
             </div>
 
         </section>
@@ -249,9 +304,10 @@ $nomeAdministrador = $_SESSION['usuario_nome'] ?? 'Administrador';
             <h2>Central de gerenciamento</h2>
 
             <p>
-                Aqui você poderá controlar os produtos, acompanhar pedidos
-                e gerenciar os clientes da loja NEXUS.
-                As próximas etapas vão implementar essas funcionalidades.
+                Gerencie os produtos da loja, acompanhe os pedidos,
+                consulte os clientes cadastrados, controle os cupons
+                de desconto e administre as avaliações dos produtos.
+                Todas as informações principais estão reunidas neste painel.
             </p>
 
         </section>

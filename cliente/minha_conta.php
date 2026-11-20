@@ -248,25 +248,25 @@ if (!$cliente) {
 
                     <h5>Minha conta</h5>
 
-                    <a href="carteira.php" class="opcao">
-                        Minha carteira
-                        <span>Consulte seu saldo de NEXUS Coins</span>
-                    </a>
+                   <a href="carteira.php" class="opcao">
+    Minha carteira
+    <span>Consulte seu saldo de NEXUS Coins</span>
+</a>
 
-                    <a href="pedidos.php" class="opcao">
-                        Meus pedidos
-                        <span>Acompanhe suas compras</span>
-                    </a>
+<a href="pedidos.php" class="opcao">
+    Meus pedidos
+    <span>Acompanhe suas compras</span>
+</a>
 
-                    <a href="#" class="opcao">
-                        Histórico de Coins
-                        <span>Consulte suas movimentações</span>
-                    </a>
+<a href="carteira.php" class="opcao">
+    Histórico de Coins
+    <span>Consulte suas movimentações</span>
+</a>
 
-                    <a href="#" class="opcao">
-                        Editar meus dados
-                        <span>Atualize suas informações pessoais</span>
-                    </a>
+<a href="editar_dados.php" class="opcao">
+    Editar meus dados
+    <span>Atualize suas informações pessoais</span>
+</a>
 
                 </div>
 

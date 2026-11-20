@@ -58,7 +58,7 @@ $movimentacoes = $consulta->fetchAll();
 
 function formatarCoins($valor)
 {
-    return number_format((float) $valor, 0, ',', '.');
+    return number_format((float) $valor, 2, ',', '.');
 }
 
 ?>

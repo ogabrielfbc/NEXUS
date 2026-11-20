@@ -284,6 +284,8 @@ $produtos = $consulta->fetchAll();
         <a href="produtos.php" class="ativo">Produtos</a>
         <a href="pedidos.php">Pedidos</a>
         <a href="clientes.php">Clientes</a>
+        <a href="cupons.php">Cupons</a>
+        <a href="avaliacoes.php">Avaliações</a>
         <a href="../index.php">Voltar para a loja</a>
 
     </aside>

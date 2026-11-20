@@ -11,6 +11,10 @@ if (!isset($_SESSION['carrinho'])) {
     $_SESSION['carrinho'] = [];
 }
 
+if (empty($_SESSION['token_finalizar_compra'])) {
+    $_SESSION['token_finalizar_compra'] = bin2hex(random_bytes(32));
+}
+
 if (empty($_SESSION['token_carrinho'])) {
     $_SESSION['token_carrinho'] = bin2hex(random_bytes(32));
 }
@@ -90,10 +94,82 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             }
 
+        // Aplicar cupom de desconto
+        } elseif (isset($_POST['aplicar_cupom'])) {
+
+            $codigoCupom = strtoupper(trim($_POST['codigo_cupom'] ?? ''));
+
+            if ($codigoCupom === '') {
+
+                unset($_SESSION['cupom_aplicado']);
+                $_SESSION['mensagem_carrinho'] = 'Digite um código de cupom.';
+
+            } else {
+
+                $sql = "SELECT
+                            id,
+                            codigo,
+                            tipo_desconto,
+                            valor_desconto,
+                            validade_inicio,
+                            validade_fim,
+                            limite_utilizacoes,
+                            utilizacoes,
+                            ativo,
+                            (NOW() BETWEEN validade_inicio AND validade_fim) AS dentro_validade
+                        FROM cupons
+                        WHERE codigo = :codigo
+                        LIMIT 1";
+
+                $consulta = $pdo->prepare($sql);
+
+                $consulta->execute([
+                    ':codigo' => $codigoCupom
+                ]);
+
+                $cupom = $consulta->fetch(PDO::FETCH_ASSOC);
+
+                if (!$cupom) {
+
+                    unset($_SESSION['cupom_aplicado']);
+                    $_SESSION['mensagem_carrinho'] = 'Cupom não encontrado.';
+
+                } elseif (!(int) $cupom['ativo']) {
+
+                    unset($_SESSION['cupom_aplicado']);
+                    $_SESSION['mensagem_carrinho'] = 'Este cupom está desativado.';
+
+                } elseif (!(int) $cupom['dentro_validade']) {
+
+                    unset($_SESSION['cupom_aplicado']);
+                    $_SESSION['mensagem_carrinho'] = 'Este cupom está fora do período de validade.';
+
+                } elseif (
+                    $cupom['limite_utilizacoes'] !== null &&
+                    (int) $cupom['utilizacoes'] >= (int) $cupom['limite_utilizacoes']
+                ) {
+
+                    unset($_SESSION['cupom_aplicado']);
+                    $_SESSION['mensagem_carrinho'] = 'Este cupom atingiu o limite de utilizações.';
+
+                } else {
+
+                    $_SESSION['cupom_aplicado'] = [
+                        'id' => (int) $cupom['id'],
+                        'codigo' => $cupom['codigo']
+                    ];
+
+                    $_SESSION['mensagem_carrinho'] = 'Cupom ' . $cupom['codigo'] . ' aplicado com sucesso!';
+
+                }
+            }
+
         // Limpar carrinho
         } elseif (isset($_POST['limpar_carrinho'])) {
 
             $_SESSION['carrinho'] = [];
+            unset($_SESSION['cupom_aplicado']);
+
             $_SESSION['mensagem_carrinho'] = 'Carrinho esvaziado.';
 
         }
@@ -139,6 +215,76 @@ if (!empty($_SESSION['carrinho'])) {
     }
 
     unset($produto);
+
+}
+
+// Valores iniciais do desconto
+$valorDesconto = 0;
+$totalComDesconto = $totalCarrinho;
+$cupomAtual = null;
+
+// Verifica o cupom aplicado
+if (!empty($_SESSION['cupom_aplicado']['id'])) {
+
+    $consulta = $pdo->prepare("
+        SELECT
+            id,
+            codigo,
+            tipo_desconto,
+            valor_desconto
+        FROM cupons
+        WHERE id = :id
+        AND ativo = 1
+        AND NOW() BETWEEN validade_inicio AND validade_fim
+        AND (
+            limite_utilizacoes IS NULL
+            OR utilizacoes < limite_utilizacoes
+        )
+        LIMIT 1
+    ");
+
+    $consulta->execute([
+        ':id' => (int) $_SESSION['cupom_aplicado']['id']
+    ]);
+
+    $cupomAtual = $consulta->fetch(PDO::FETCH_ASSOC);
+
+    if (!$cupomAtual) {
+
+        unset($_SESSION['cupom_aplicado']);
+
+        $_SESSION['mensagem_carrinho'] = 'O cupom não está mais disponível.';
+
+    } else {
+
+        $subtotalCentavos = (int) round($totalCarrinho * 100);
+
+        if ($cupomAtual['tipo_desconto'] === 'porcentagem') {
+
+            $descontoCentavos = (int) round(
+                $subtotalCentavos * ((float) $cupomAtual['valor_desconto'] / 100)
+            );
+
+        } else {
+
+            $descontoCentavos = (int) round(
+                (float) $cupomAtual['valor_desconto'] * 100
+            );
+
+        }
+
+        $descontoCentavos = min(
+            max(0, $descontoCentavos),
+            $subtotalCentavos
+        );
+
+        $valorDesconto = $descontoCentavos / 100;
+
+        $totalComDesconto = (
+            $subtotalCentavos - $descontoCentavos
+        ) / 100;
+
+    }
 }
 
 $mensagem = $_SESSION['mensagem_carrinho'] ?? '';
@@ -380,6 +526,17 @@ unset($_SESSION['mensagem_carrinho']);
     </style>
 
 </head>
+<script>
+document.querySelector('form[action="finalizar_compra.php"]')
+    .addEventListener('submit', function () {
+
+        const botao = document.getElementById('botao-finalizar');
+
+        botao.disabled = true;
+        botao.textContent = 'Processando compra...';
+
+    });
+</script>
 
 <body>
 
@@ -483,11 +640,17 @@ unset($_SESSION['mensagem_carrinho']);
 
                                         <form method="POST">
 
-                                            <input type="hidden" name="token_carrinho"
-                                                value="<?= htmlspecialchars($_SESSION['token_carrinho']) ?>">
+                                            <input
+                                                type="hidden"
+                                                name="token_carrinho"
+                                                value="<?= htmlspecialchars($_SESSION['token_carrinho']) ?>"
+                                            >
 
-                                            <input type="hidden" name="id_produto"
-                                                value="<?= (int) $produto['id'] ?>">
+                                            <input
+                                                type="hidden"
+                                                name="id_produto"
+                                                value="<?= (int) $produto['id'] ?>"
+                                            >
 
                                             <button
                                                 type="submit"
@@ -506,11 +669,17 @@ unset($_SESSION['mensagem_carrinho']);
 
                                         <form method="POST">
 
-                                            <input type="hidden" name="token_carrinho"
-                                                value="<?= htmlspecialchars($_SESSION['token_carrinho']) ?>">
+                                            <input
+                                                type="hidden"
+                                                name="token_carrinho"
+                                                value="<?= htmlspecialchars($_SESSION['token_carrinho']) ?>"
+                                            >
 
-                                            <input type="hidden" name="id_produto"
-                                                value="<?= (int) $produto['id'] ?>">
+                                            <input
+                                                type="hidden"
+                                                name="id_produto"
+                                                value="<?= (int) $produto['id'] ?>"
+                                            >
 
                                             <button
                                                 type="submit"
@@ -539,11 +708,17 @@ unset($_SESSION['mensagem_carrinho']);
 
                                     <form method="POST">
 
-                                        <input type="hidden" name="token_carrinho"
-                                            value="<?= htmlspecialchars($_SESSION['token_carrinho']) ?>">
+                                        <input
+                                            type="hidden"
+                                            name="token_carrinho"
+                                            value="<?= htmlspecialchars($_SESSION['token_carrinho']) ?>"
+                                        >
 
-                                        <input type="hidden" name="id_produto"
-                                            value="<?= (int) $produto['id'] ?>">
+                                        <input
+                                            type="hidden"
+                                            name="id_produto"
+                                            value="<?= (int) $produto['id'] ?>"
+                                        >
 
                                         <button
                                             type="submit"
@@ -571,8 +746,11 @@ unset($_SESSION['mensagem_carrinho']);
 
                         <form method="POST">
 
-                            <input type="hidden" name="token_carrinho"
-                                value="<?= htmlspecialchars($_SESSION['token_carrinho']) ?>">
+                            <input
+                                type="hidden"
+                                name="token_carrinho"
+                                value="<?= htmlspecialchars($_SESSION['token_carrinho']) ?>"
+                            >
 
                             <button
                                 type="submit"
@@ -609,21 +787,88 @@ unset($_SESSION['mensagem_carrinho']);
                             </span>
                         </div>
 
-                        <div class="linha-resumo total">
-                            <span>Total</span>
-                            <span class="preco">
+                        <div class="mt-4 mb-3">
+
+                            <label for="codigo_cupom" class="form-label fw-bold">
+                                Cupom de desconto
+                            </label>
+
+                            <form method="POST" class="d-flex gap-2">
+
+                                <input
+                                    type="hidden"
+                                    name="token_carrinho"
+                                    value="<?= htmlspecialchars($_SESSION['token_carrinho']) ?>"
+                                >
+
+                                <input
+                                    type="text"
+                                    name="codigo_cupom"
+                                    id="codigo_cupom"
+                                    class="form-control"
+                                    placeholder="Digite seu cupom"
+                                    value="<?= htmlspecialchars($_SESSION['cupom_aplicado']['codigo'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
+                                    style="background: #0b1322; border: 1px solid #29496e; color: white;"
+                                    maxlength="50"
+                                    required
+                                >
+
+                                <button
+                                    type="submit"
+                                    name="aplicar_cupom"
+                                    class="btn-loja"
+                                >
+                                    Aplicar
+                                </button>
+
+                            </form>
+
+                        </div>
+
+                        <div class="linha-resumo">
+                            <span>Subtotal</span>
+                            <span>
                                 <?= number_format($totalCarrinho, 2, ',', '.') ?> NC
                             </span>
                         </div>
 
-                        <button
-                            type="button"
-                            class="btn-loja w-100 mt-3"
-                            disabled
-                            title="Finalização será implementada na próxima etapa"
-                        >
-                            Finalização em breve
-                        </button>
+                        <?php if ($valorDesconto > 0): ?>
+
+                            <div class="linha-resumo">
+                                <span>Desconto</span>
+
+                                <span style="color: #39c98a;">
+                                    - <?= number_format($valorDesconto, 2, ',', '.') ?> NC
+                                </span>
+                            </div>
+
+                        <?php endif; ?>
+
+                        <div class="linha-resumo total">
+                            <span>Total</span>
+
+                            <span class="preco">
+                                <?= number_format($totalComDesconto, 2, ',', '.') ?> NC
+                            </span>
+                        </div>
+
+                        <form action="finalizar_compra.php" method="POST">
+
+                            <input
+                                type="hidden"
+                                name="token_finalizar_compra"
+                                value="<?= htmlspecialchars($_SESSION['token_finalizar_compra'], ENT_QUOTES, 'UTF-8') ?>"
+                            >
+
+                          <button
+    type="submit"
+    class="btn-loja w-100 mt-3"
+    id="botao-finalizar"
+>
+    Finalizar compra
+</button>
+
+                        </form>
 
                         <p class="texto-secundario text-center mt-3 mb-0">
                             Moeda virtual NEXUS Coins

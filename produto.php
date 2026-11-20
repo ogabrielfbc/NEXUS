@@ -96,6 +96,52 @@ if ($produto) {
         $imagensGaleria[] = $produto['imagem'];
     }
 }
+// Buscar avaliações do produto
+
+$avaliacoes = [];
+$mediaAvaliacoes = 0;
+$totalAvaliacoes = 0;
+
+if ($produto) {
+
+    $sql = "SELECT
+                COUNT(*) AS total,
+                AVG(nota) AS media
+            FROM avaliacoes
+            WHERE produto_id = :produto_id
+            AND aprovado = 1";
+
+    $consulta = $pdo->prepare($sql);
+    $consulta->execute([
+        ':produto_id' => $produto['id']
+    ]);
+
+    $resumoAvaliacoes = $consulta->fetch(PDO::FETCH_ASSOC);
+
+    $totalAvaliacoes = (int) $resumoAvaliacoes['total'];
+    $mediaAvaliacoes = (float) ($resumoAvaliacoes['media'] ?? 0);
+
+    $sql = "SELECT
+                a.nota,
+                a.comentario,
+                a.criado_em,
+                u.nome AS nome_cliente
+            FROM avaliacoes a
+            INNER JOIN usuarios u
+                ON a.usuario_id = u.id
+            WHERE a.produto_id = :produto_id
+            AND a.aprovado = 1
+            ORDER BY a.criado_em DESC";
+
+    $consulta = $pdo->prepare($sql);
+
+    $consulta->execute([
+        ':produto_id' => $produto['id']
+    ]);
+
+    $avaliacoes = $consulta->fetchAll(PDO::FETCH_ASSOC);
+}
+
 // Adicionar produto ao carrinho
 
 // Adicionar produto ao carrinho
@@ -103,7 +149,7 @@ if ($produto) {
 if (
     $produto &&
     $_SERVER['REQUEST_METHOD'] === 'POST' &&
-    isset($_POST['adicionar_carrinho'])
+    (isset($_POST['adicionar_carrinho']) || isset($_POST['comprar_agora']))
 ) {
 
     $token = $_POST['token_carrinho'] ?? '';
@@ -143,9 +189,13 @@ if (
             }
         }
     }
-
+if (isset($_POST['comprar_agora'])) {
+    header('Location: carrinho.php');
+} else {
     header('Location: produto.php?id=' . $id);
-    exit;
+}
+
+exit;
 }
 
 ?>
@@ -222,7 +272,7 @@ if (
     </script>
 </head>
 
-<body>
+<body class="pagina-produto">
 
     <main class="container product-details">
 
@@ -380,12 +430,22 @@ if (
 </div>
 
         <button
-            type="submit"
-            name="adicionar_carrinho"
-            class="btn btn-primary"
-        >
-            Adicionar ao carrinho
-        </button>
+    type="submit"
+    name="adicionar_carrinho"
+    class="botao-carrinho"
+>
+    <i class="bi bi-cart-plus"></i>
+    Adicionar ao carrinho
+</button>
+
+<button
+    type="submit"
+    name="comprar_agora"
+    class="botao-comprar"
+>
+    <i class="bi bi-lightning-charge-fill"></i>
+    Comprar agora
+</button>
 
     </form>
 
@@ -399,13 +459,104 @@ if (
 
                 </div>
 
-            </div>
+                       </div>
+
+            <!-- Avaliações dos clientes -->
+
+            <section class="secao-avaliacoes">
+
+                <h2>Avaliações dos clientes</h2>
+
+                <p class="text-secondary">
+                    Veja a opinião de quem já comprou este produto.
+                </p>
+
+                <?php if ($totalAvaliacoes > 0): ?>
+
+                    <div class="resumo-avaliacoes">
+
+                        <span class="numero-media">
+                            <?= number_format($mediaAvaliacoes, 1, ',', '.') ?>
+                        </span>
+
+                        <span class="media-estrelas">
+                            <?php
+                            $estrelasCheias = (int) round($mediaAvaliacoes);
+                            echo str_repeat('★', $estrelasCheias);
+                            echo str_repeat('☆', 5 - $estrelasCheias);
+                            ?>
+                        </span>
+
+                        <span class="total-avaliacoes">
+                            <?= $totalAvaliacoes ?>
+                            <?= $totalAvaliacoes === 1 ? 'avaliação' : 'avaliações' ?>
+                        </span>
+
+                    </div>
+
+                    <?php foreach ($avaliacoes as $avaliacao): ?>
+
+                        <article class="avaliacao-cliente">
+
+                            <div class="avaliacao-cliente-topo">
+
+                                <div>
+
+                                    <div class="avaliacao-cliente-nome">
+                                        <?= htmlspecialchars(
+                                            $avaliacao['nome_cliente'],
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ) ?>
+                                    </div>
+
+                                    <div class="avaliacao-cliente-data">
+                                        <?= date(
+                                            'd/m/Y',
+                                            strtotime($avaliacao['criado_em'])
+                                        ) ?>
+                                    </div>
+
+                                </div>
+
+                                <div class="avaliacao-cliente-estrelas">
+                                    <?= str_repeat('★', (int) $avaliacao['nota']) ?>
+                                    <?= str_repeat('☆', 5 - (int) $avaliacao['nota']) ?>
+                                </div>
+
+                            </div>
+
+                            <?php if (!empty($avaliacao['comentario'])): ?>
+
+                                <p class="avaliacao-cliente-comentario">
+                                    <?= htmlspecialchars(
+                                        $avaliacao['comentario'],
+                                        ENT_QUOTES,
+                                        'UTF-8'
+                                    ) ?>
+                                </p>
+
+                            <?php endif; ?>
+
+                        </article>
+
+                    <?php endforeach; ?>
+
+                <?php else: ?>
+
+                    <div class="sem-avaliacoes">
+                        Este produto ainda não recebeu avaliações.
+                        Seja o primeiro a compartilhar sua opinião!
+                    </div>
+
+                <?php endif; ?>
+
+            </section>
 
         <?php endif; ?>
 
-        
-
     </main>
+    
 
     <!-- Modal da galeria -->
 

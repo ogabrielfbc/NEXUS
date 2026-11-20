@@ -443,6 +443,8 @@ unset($_SESSION['mensagem_pedidos']);
         <a href="produtos.php">Produtos</a>
         <a href="pedidos.php" class="ativo">Pedidos</a>
         <a href="clientes.php">Clientes</a>
+        <a href="cupons.php">Cupons</a>
+        <a href="avaliacoes.php">Avaliações</a>
         <a href="../index.php">Voltar para a loja</a>
 
     </aside>
