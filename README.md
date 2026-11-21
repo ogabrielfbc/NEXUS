@@ -8,7 +8,7 @@ O projeto simula o funcionamento de um e-commerce, oferecendo gerenciamento admi
 
 - **PHP** — programação e funcionalidades do sistema.
 - **HTML5** — estrutura das páginas.
-- **CSS3** — estilização e identidade visual.
+- **CSS** — estilização e identidade visual.
 - **Bootstrap 5** — componentes e responsividade.
 - **JavaScript** — interatividade das páginas.
 - **MySQL** — armazenamento dos dados.
