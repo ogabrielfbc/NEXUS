@@ -14,6 +14,13 @@ $clienteLogado = (
 $nomeCliente = $clienteLogado
     ? $_SESSION['usuario_nome']
     : '';
+    // 1. Conta os produtos do carrinho
+
+$quantidadeCarrinho = 0;
+
+if (!empty($_SESSION['carrinho'])) {
+    $quantidadeCarrinho = array_sum($_SESSION['carrinho']);
+}
 
 ?>
 
@@ -27,20 +34,18 @@ $nomeCliente = $clienteLogado
 
     <title>NEXUS TECH | Tecnologia e inovação</title>
 
-    <!-- Bootstrap -->
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
     >
 
-    <!-- CSS principal -->
     <link rel="stylesheet" href="style.css">
 
 </head>
 
 <body>
 
-    <!-- MENU -->
+    <!-- 1. Menu de navegação -->
 
     <nav class="navbar navbar-expand-lg navbar-dark home-navbar">
 
@@ -89,12 +94,23 @@ $nomeCliente = $clienteLogado
                             Todos os produtos
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link home-carrinho" href="carrinho.php">
+                            🛒 Meu carrinho
+
+                    <?php if ($quantidadeCarrinho > 0): ?>
+                         <span class="carrinho-contador">
+                         <?= $quantidadeCarrinho ?>
+                         </span>
+                     <?php endif; ?>
+                     </a>
+                    </li>
 
                     <?php if ($clienteLogado): ?>
 
                         <li class="nav-item">
                             <a class="nav-link home-account" href="cliente/minha_conta.php">
-                                Olá, <?= htmlspecialchars($nomeCliente) ?>
+                                Olá, <?= htmlspecialchars($nomeCliente, ENT_QUOTES, 'UTF-8') ?>
                             </a>
                         </li>
 
@@ -123,7 +139,7 @@ $nomeCliente = $clienteLogado
     </nav>
 
 
-    <!-- BANNER PRINCIPAL -->
+    <!-- 2. Banner principal -->
 
     <section class="home-hero">
 
@@ -153,7 +169,7 @@ $nomeCliente = $clienteLogado
                         <div class="home-hero-buttons">
 
                             <a href="produtos.php" class="home-button">
-                                Explorar produtos <span>→</span>
+                                Explorar produtos <span></span>
                             </a>
 
                             <a href="#categorias" class="home-secondary-button">
@@ -212,7 +228,34 @@ $nomeCliente = $clienteLogado
     </section>
 
 
-    <!-- CATEGORIAS -->
+    <!-- 3. Apresentação da NEXUS TECH -->
+
+    <section class="home-apresentacao">
+
+        <div class="container">
+
+            <span class="home-tag">
+                CONHEÇA A NEXUS TECH
+            </span>
+
+            <h2>
+                Tecnologia para ir além.
+                <span>Seu universo começa aqui.</span>
+            </h2>
+
+            <p>
+                A NEXUS TECH nasceu com o propósito de conectar pessoas
+                à tecnologia. Reunimos produtos, inovação e praticidade
+                para você montar seu setup, encontrar novos equipamentos
+                e aproveitar cada experiência ao máximo.
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <!-- 4. Categorias de produtos -->
 
     <section class="container home-categories" id="categorias">
 
@@ -233,7 +276,7 @@ $nomeCliente = $clienteLogado
             </div>
 
             <a href="produtos.php" class="home-see-all">
-                Ver todos <span>→</span>
+                Ver todos <span></span>
             </a>
 
         </div>
@@ -294,12 +337,12 @@ $nomeCliente = $clienteLogado
     </section>
 
 
-    <!-- PRODUTOS EM DESTAQUE -->
+    <!-- 5. Produtos em destaque -->
 
     <?php include __DIR__ . '/produto2.php'; ?>
 
 
-    <!-- RODAPÉ -->
+    <!-- 6. Rodapé -->
 
     <footer class="home-footer">
 
@@ -326,6 +369,17 @@ $nomeCliente = $clienteLogado
                     <a href="#categorias">Categorias</a>
 
                 </div>
+                <div class="home-footer-links">
+
+    <a href="index.php">Início</a>
+    <a href="produtos.php">Produtos</a>
+    <a href="#categorias">Categorias</a>
+
+    <a href="admin/login.php" class="home-admin-link">
+        Acesso administrativo
+    </a>
+
+</div>
 
             </div>
 
@@ -338,7 +392,7 @@ $nomeCliente = $clienteLogado
     </footer>
 
 
-    <!-- BOOTSTRAP JS -->
+    <!-- Scripts -->
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 

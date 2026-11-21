@@ -1,44 +1,70 @@
 
 <?php
 
+// 1. Verifica o acesso do cliente
 require_once __DIR__ . '/proteger_cliente.php';
 
+// 2. Conecta ao banco de dados
 $pdo = require __DIR__ . '/../config/database.php';
 
+// 3. Verifica se a requisição foi enviada por POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: pedidos.php');
     exit;
 }
 
-if (empty($_SESSION['token_avaliacao']) ||
-    !hash_equals($_SESSION['token_avaliacao'], $_POST['token'] ?? '')) {
+// 4. Valida o token de segurança
+$token = $_POST['token'] ?? '';
+
+if (
+    empty($_SESSION['token_avaliacao']) ||
+    !is_string($token) ||
+    !hash_equals($_SESSION['token_avaliacao'], $token)
+) {
+
     $_SESSION['mensagem_avaliacao'] = 'Token de segurança inválido.';
+
     header('Location: pedidos.php');
     exit;
 }
 
+// 5. Recebe os dados da avaliação
 $produtoId = filter_input(INPUT_POST, 'produto_id', FILTER_VALIDATE_INT);
 $pedidoId = filter_input(INPUT_POST, 'pedido_id', FILTER_VALIDATE_INT);
 $nota = filter_input(INPUT_POST, 'nota', FILTER_VALIDATE_INT);
+
 $comentario = trim($_POST['comentario'] ?? '');
 
 $usuarioId = (int) $_SESSION['usuario_id'];
 
-if (!$produtoId || !$pedidoId || !$nota || $nota < 1 || $nota > 5) {
+// 6. Valida os dados recebidos
+if (
+    !$produtoId ||
+    !$pedidoId ||
+    !$nota ||
+    $nota < 1 ||
+    $nota > 5
+) {
+
     $_SESSION['mensagem_avaliacao'] = 'Dados da avaliação inválidos.';
+
     header('Location: pedidos.php');
     exit;
 }
 
+// 7. Verifica o tamanho do comentário
 if (mb_strlen($comentario) > 2000) {
+
     $_SESSION['mensagem_avaliacao'] = 'O comentário deve ter no máximo 2.000 caracteres.';
+
     header('Location: pedidos.php');
     exit;
 }
 
+// 8. Processa o registro da avaliação
 try {
 
-    // Confirmar se o cliente comprou o produto
+    // 9. Confirma se o cliente comprou o produto
     $sql = "SELECT ip.produto_id
             FROM itens_pedido ip
             INNER JOIN pedidos p
@@ -58,10 +84,12 @@ try {
     ]);
 
     if (!$consulta->fetch()) {
-        throw new RuntimeException('Você precisa ter comprado este produto para avaliá-lo.');
+        throw new RuntimeException(
+            'Você precisa ter comprado este produto para avaliá-lo.'
+        );
     }
 
-    // Impedir avaliação duplicada
+    // 10. Verifica se o cliente já avaliou o produto
     $sql = "SELECT id
             FROM avaliacoes
             WHERE produto_id = :produto_id
@@ -76,10 +104,12 @@ try {
     ]);
 
     if ($consulta->fetch()) {
-        throw new RuntimeException('Você já avaliou este produto.');
+        throw new RuntimeException(
+            'Você já avaliou este produto.'
+        );
     }
 
-    // Salvar avaliação
+    // 11. Registra a avaliação
     $sql = "INSERT INTO avaliacoes (
                 produto_id,
                 usuario_id,
@@ -104,17 +134,21 @@ try {
         ':comentario' => $comentario !== '' ? $comentario : null
     ]);
 
+    // 12. Confirma o sucesso
     $_SESSION['mensagem_avaliacao'] = 'Avaliação enviada com sucesso!';
 
 } catch (RuntimeException $erro) {
 
+    // 13. Trata erros de validação
     $_SESSION['mensagem_avaliacao'] = $erro->getMessage();
 
 } catch (PDOException $erro) {
 
+    // 14. Trata erros do banco de dados
     $_SESSION['mensagem_avaliacao'] = 'Não foi possível registrar sua avaliação.';
 
 }
 
+// 15. Retorna para os pedidos
 header('Location: pedidos.php');
 exit;

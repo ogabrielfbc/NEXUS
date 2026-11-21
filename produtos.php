@@ -1,9 +1,11 @@
 
 <?php
 
+// 1. Conecta ao banco de dados
+
 $pdo = require __DIR__ . '/config/database.php';
 
-// Filtros
+// 2. Recebe os filtros enviados pela URL
 
 $categoriaSelecionada = filter_input(INPUT_GET, 'categoria', FILTER_VALIDATE_INT);
 $precoMinimo = filter_input(INPUT_GET, 'preco_minimo', FILTER_VALIDATE_FLOAT);
@@ -21,7 +23,7 @@ $busca = trim($busca);
 $somenteDisponiveis = isset($_GET['disponivel'])
     && $_GET['disponivel'] === '1';
 
-// Validar valores
+// 3. Valida os valores dos filtros
 
 if ($categoriaSelecionada === false || $categoriaSelecionada < 1) {
     $categoriaSelecionada = null;
@@ -44,7 +46,7 @@ if (
     $precoMaximo = null;
 }
 
-// Ordenação
+// 4. Define as opções de ordenação
 
 $ordenacoes = [
     'recentes' => 'p.criado_em DESC',
@@ -59,7 +61,7 @@ if (!is_string($ordemSelecionada) || !isset($ordenacoes[$ordemSelecionada])) {
 
 $ordenacaoSQL = $ordenacoes[$ordemSelecionada];
 
-// Categorias
+// 5. Busca as categorias disponíveis
 
 $sqlCategorias = "SELECT
                       id,
@@ -70,7 +72,7 @@ $sqlCategorias = "SELECT
 $consultaCategorias = $pdo->query($sqlCategorias);
 $categorias = $consultaCategorias->fetchAll();
 
-// Produtos
+// 6. Prepara a consulta dos produtos
 
 $sql = "SELECT
             p.id,
@@ -87,14 +89,14 @@ $sql = "SELECT
 
 $parametros = [];
 
-// Filtro por categoria
+// 7. Aplica o filtro por categoria
 
 if ($categoriaSelecionada !== null) {
     $sql .= " AND p.categoria_id = :categoria_id";
     $parametros[':categoria_id'] = $categoriaSelecionada;
 }
 
-// Filtro por preço
+// 8. Aplica os filtros de preço
 
 if ($precoMinimo !== null) {
     $sql .= " AND p.preco >= :preco_minimo";
@@ -106,20 +108,20 @@ if ($precoMaximo !== null) {
     $parametros[':preco_maximo'] = $precoMaximo;
 }
 
-// Busca por nome
+// 9. Aplica a busca pelo nome do produto
 
 if ($busca !== '') {
     $sql .= " AND p.nome LIKE :busca";
     $parametros[':busca'] = '%' . $busca . '%';
 }
 
-// Disponibilidade
+// 10. Filtra somente os produtos disponíveis
 
 if ($somenteDisponiveis) {
     $sql .= " AND p.estoque > 0";
 }
 
-// Ordenação e execução
+// 11. Define a ordenação e busca os produtos
 
 $sql .= " ORDER BY " . $ordenacaoSQL;
 
@@ -140,20 +142,22 @@ $produtos = $consulta->fetchAll();
 
     <title>NEXUS TECH | Todos os produtos</title>
 
-    <!-- Bootstrap -->
+    <!-- 12. Carrega o Bootstrap -->
+
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
     >
 
-    <!-- CSS principal -->
+    <!-- 13. Carrega o CSS principal -->
+
     <link rel="stylesheet" href="style.css">
 
 </head>
 
 <body>
 
-    <!-- Menu -->
+    <!-- 14. Menu de navegação -->
 
     <nav class="navbar navbar-expand-lg navbar-dark">
 
@@ -205,8 +209,7 @@ $produtos = $consulta->fetchAll();
 
     </nav>
 
-
-    <!-- Catálogo -->
+    <!-- 15. Catálogo de produtos -->
 
     <section class="container mt-5 pt-4" id="produtos">
 
@@ -218,7 +221,7 @@ $produtos = $consulta->fetchAll();
             Explore nosso catálogo e encontre os equipamentos ideais para seu setup.
         </p>
 
-        <!-- Botão de filtros -->
+        <!-- 16. Botão para abrir os filtros -->
 
         <div class="mb-4">
 
@@ -232,8 +235,7 @@ $produtos = $consulta->fetchAll();
 
         </div>
 
-
-        <!-- Modal de filtros -->
+        <!-- 17. Modal de filtros -->
 
         <div class="modal-filtro" id="modalFiltro">
 
@@ -261,7 +263,9 @@ $produtos = $consulta->fetchAll();
 
                         <div class="campo-filtro">
 
-                            <label for="busca">Buscar produto</label>
+                            <label for="busca">
+                                Buscar produto
+                            </label>
 
                             <input
                                 type="text"
@@ -273,16 +277,19 @@ $produtos = $consulta->fetchAll();
 
                         </div>
 
-
                         <!-- Categoria -->
 
                         <div class="campo-filtro">
 
-                            <label for="categoria">Categoria</label>
+                            <label for="categoria">
+                                Categoria
+                            </label>
 
                             <select name="categoria" id="categoria">
 
-                                <option value="">Todas as categorias</option>
+                                <option value="">
+                                    Todas as categorias
+                                </option>
 
                                 <?php foreach ($categorias as $categoria): ?>
 
@@ -299,12 +306,13 @@ $produtos = $consulta->fetchAll();
 
                         </div>
 
-
                         <!-- Preço mínimo -->
 
                         <div class="campo-filtro">
 
-                            <label for="preco_minimo">Preço mínimo</label>
+                            <label for="preco_minimo">
+                                Preço mínimo
+                            </label>
 
                             <input
                                 type="number"
@@ -318,12 +326,13 @@ $produtos = $consulta->fetchAll();
 
                         </div>
 
-
                         <!-- Preço máximo -->
 
                         <div class="campo-filtro">
 
-                            <label for="preco_maximo">Preço máximo</label>
+                            <label for="preco_maximo">
+                                Preço máximo
+                            </label>
 
                             <input
                                 type="number"
@@ -337,12 +346,13 @@ $produtos = $consulta->fetchAll();
 
                         </div>
 
-
                         <!-- Ordenação -->
 
                         <div class="campo-filtro">
 
-                            <label for="ordem">Ordenar por</label>
+                            <label for="ordem">
+                                Ordenar por
+                            </label>
 
                             <select name="ordem" id="ordem">
 
@@ -368,7 +378,6 @@ $produtos = $consulta->fetchAll();
 
                     </div>
 
-
                     <!-- Disponibilidade -->
 
                     <div class="campo-disponibilidade">
@@ -388,16 +397,21 @@ $produtos = $consulta->fetchAll();
 
                     </div>
 
-
                     <!-- Ações dos filtros -->
 
                     <div class="acoes-filtro">
 
-                        <a href="produtos.php#produtos" class="btn-limpar-filtro">
+                        <a
+                            href="produtos.php#produtos"
+                            class="btn-limpar-filtro"
+                        >
                             Limpar filtros
                         </a>
 
-                        <button type="submit" class="btn-aplicar-filtro">
+                        <button
+                            type="submit"
+                            class="btn-aplicar-filtro"
+                        >
                             Aplicar filtros
                         </button>
 
@@ -409,8 +423,7 @@ $produtos = $consulta->fetchAll();
 
         </div>
 
-
-        <!-- Resultados -->
+        <!-- 18. Exibe os resultados -->
 
         <div class="row g-4">
 
@@ -422,7 +435,7 @@ $produtos = $consulta->fetchAll();
 
                         <div class="product-card">
 
-                            <!-- Imagem -->
+                            <!-- Imagem do produto -->
 
                             <div class="product-image">
 
@@ -442,8 +455,7 @@ $produtos = $consulta->fetchAll();
 
                             </div>
 
-
-                            <!-- Informações -->
+                            <!-- Informações do produto -->
 
                             <div class="product-info">
 
@@ -502,8 +514,7 @@ $produtos = $consulta->fetchAll();
 
     </section>
 
-
-    <!-- Rodapé -->
+    <!-- 19. Rodapé -->
 
     <footer>
 
@@ -518,8 +529,7 @@ $produtos = $consulta->fetchAll();
 
     </footer>
 
-
-    <!-- JavaScript -->
+    <!-- 20. JavaScript dos filtros -->
 
     <script>
 
@@ -543,7 +553,7 @@ $produtos = $consulta->fetchAll();
 
     </script>
 
-    <!-- Bootstrap JS -->
+    <!-- 21. JavaScript do Bootstrap -->
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 

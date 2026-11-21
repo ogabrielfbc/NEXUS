@@ -1,10 +1,13 @@
 
 <?php
 
+// 1. Verifica o acesso do cliente
 require_once __DIR__ . '/proteger_cliente.php';
 
+// 2. Conecta ao banco de dados
 $pdo = require __DIR__ . '/../config/database.php';
 
+// 3. Busca os dados do cliente
 $sql = "SELECT id, nome, email, criado_em
         FROM usuarios
         WHERE id = :id
@@ -19,6 +22,7 @@ $consulta->execute([
 
 $cliente = $consulta->fetch();
 
+// 4. Verifica se o cliente ainda existe
 if (!$cliente) {
     session_unset();
     session_destroy();
@@ -33,14 +37,23 @@ if (!$cliente) {
 <html lang="pt-BR">
 
 <head>
+
+    <!-- 5. Configurações da página -->
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Minha Conta | NEXUS TECH</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <!-- 6. Estilos da página -->
 
     <style>
+
         * {
             box-sizing: border-box;
         }
@@ -52,6 +65,8 @@ if (!$cliente) {
             color: #fff;
             font-family: Arial, sans-serif;
         }
+
+        /* Cabeçalho */
 
         header {
             background: #101a2b;
@@ -81,6 +96,8 @@ if (!$cliente) {
             color: #38a5ff;
         }
 
+        /* Conteúdo principal */
+
         .conteudo {
             width: 90%;
             max-width: 1100px;
@@ -100,6 +117,8 @@ if (!$cliente) {
             color: #94a3b8;
         }
 
+        /* Cartões da conta */
+
         .cartao {
             background: #101a2b;
             border: 1px solid #1d304a;
@@ -112,6 +131,8 @@ if (!$cliente) {
             color: #38a5ff;
             margin-bottom: 20px;
         }
+
+        /* Informações pessoais */
 
         .informacao {
             padding: 13px 0;
@@ -132,6 +153,8 @@ if (!$cliente) {
             font-size: 15px;
             overflow-wrap: anywhere;
         }
+
+        /* Opções da conta */
 
         .opcao {
             display: block;
@@ -157,6 +180,8 @@ if (!$cliente) {
             margin-top: 5px;
         }
 
+        /* Botão para sair */
+
         .btn-sair {
             display: inline-block;
             padding: 10px 20px;
@@ -173,7 +198,10 @@ if (!$cliente) {
             color: #fff;
         }
 
+        /* Ajustes para telas menores */
+
         @media (max-width: 600px) {
+
             header {
                 padding: 16px 5%;
             }
@@ -185,15 +213,22 @@ if (!$cliente) {
             .conteudo {
                 margin-top: 30px;
             }
+
         }
+
     </style>
+
 </head>
 
 <body>
 
+    <!-- 7. Cabeçalho -->
+
     <header>
 
-        <a href="../index.php" class="logo">NEXUS TECH</a>
+        <a href="../index.php" class="logo">
+            NEXUS TECH
+        </a>
 
         <a href="../index.php" class="voltar">
             Voltar para a loja
@@ -201,19 +236,27 @@ if (!$cliente) {
 
     </header>
 
+    <!-- 8. Área principal da conta -->
+
     <main class="conteudo">
+
+        <!-- 9. Mensagem de boas-vindas -->
 
         <div class="boas-vindas">
 
             <h1>
-                Olá, <?= htmlspecialchars($cliente['nome']) ?>!
+                Olá, <?= htmlspecialchars($cliente['nome'], ENT_QUOTES, 'UTF-8') ?>!
             </h1>
 
-            <p>Bem-vindo à sua área pessoal da NEXUS TECH.</p>
+            <p>
+                Bem-vindo à sua área pessoal da NEXUS TECH.
+            </p>
 
         </div>
 
         <div class="row g-4">
+
+            <!-- 10. Dados pessoais do cliente -->
 
             <div class="col-md-6">
 
@@ -222,25 +265,40 @@ if (!$cliente) {
                     <h5>Meus dados</h5>
 
                     <div class="informacao">
+
                         <small>Nome completo</small>
-                        <strong><?= htmlspecialchars($cliente['nome']) ?></strong>
+
+                        <strong>
+                            <?= htmlspecialchars($cliente['nome'], ENT_QUOTES, 'UTF-8') ?>
+                        </strong>
+
                     </div>
 
                     <div class="informacao">
+
                         <small>E-mail</small>
-                        <strong><?= htmlspecialchars($cliente['email']) ?></strong>
+
+                        <strong>
+                            <?= htmlspecialchars($cliente['email'], ENT_QUOTES, 'UTF-8') ?>
+                        </strong>
+
                     </div>
 
                     <div class="informacao">
+
                         <small>Cliente desde</small>
+
                         <strong>
                             <?= date('d/m/Y', strtotime($cliente['criado_em'])) ?>
                         </strong>
+
                     </div>
 
                 </div>
 
             </div>
+
+            <!-- 11. Opções da conta -->
 
             <div class="col-md-6">
 
@@ -248,31 +306,45 @@ if (!$cliente) {
 
                     <h5>Minha conta</h5>
 
-                   <a href="carteira.php" class="opcao">
-    Minha carteira
-    <span>Consulte seu saldo de NEXUS Coins</span>
-</a>
+                    <a href="carteira.php" class="opcao">
+                        Minha carteira
 
-<a href="pedidos.php" class="opcao">
-    Meus pedidos
-    <span>Acompanhe suas compras</span>
-</a>
+                        <span>
+                            Consulte seu saldo de NEXUS Coins
+                        </span>
+                    </a>
 
-<a href="carteira.php" class="opcao">
-    Histórico de Coins
-    <span>Consulte suas movimentações</span>
-</a>
+                    <a href="pedidos.php" class="opcao">
+                        Meus pedidos
 
-<a href="editar_dados.php" class="opcao">
-    Editar meus dados
-    <span>Atualize suas informações pessoais</span>
-</a>
+                        <span>
+                            Acompanhe suas compras
+                        </span>
+                    </a>
+
+                    <a href="carteira.php" class="opcao">
+                        Histórico de Coins
+
+                        <span>
+                            Consulte suas movimentações
+                        </span>
+                    </a>
+
+                    <a href="editar_dados.php" class="opcao">
+                        Editar meus dados
+
+                        <span>
+                            Atualize suas informações pessoais
+                        </span>
+                    </a>
 
                 </div>
 
             </div>
 
         </div>
+
+        <!-- 12. Botão para encerrar a sessão -->
 
         <a href="sair.php" class="btn-sair">
             Sair da conta
@@ -281,4 +353,5 @@ if (!$cliente) {
     </main>
 
 </body>
+
 </html>

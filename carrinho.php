@@ -1,11 +1,16 @@
 
 <?php
 
+// 1. Inicia a sessão e conecta ao banco
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 $pdo = require __DIR__ . '/config/database.php';
+
+
+// 2. Prepara o carrinho e os tokens
 
 if (!isset($_SESSION['carrinho'])) {
     $_SESSION['carrinho'] = [];
@@ -19,7 +24,9 @@ if (empty($_SESSION['token_carrinho'])) {
     $_SESSION['token_carrinho'] = bin2hex(random_bytes(32));
 }
 
-// Processa as ações do carrinho
+
+// 3. Processa as ações do carrinho
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $token = $_POST['token_carrinho'] ?? '';
@@ -32,7 +39,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $idProduto = filter_input(INPUT_POST, 'id_produto', FILTER_VALIDATE_INT);
 
-        // Aumentar quantidade
+
+        // Aumenta a quantidade
+
         if (isset($_POST['aumentar_quantidade'])) {
 
             if ($idProduto && isset($_SESSION['carrinho'][$idProduto])) {
@@ -51,11 +60,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!$produto) {
 
                     unset($_SESSION['carrinho'][$idProduto]);
+
                     $_SESSION['mensagem_carrinho'] = 'Produto indisponível e removido do carrinho.';
 
                 } elseif ($_SESSION['carrinho'][$idProduto] < $produto['estoque']) {
 
                     $_SESSION['carrinho'][$idProduto]++;
+
                     $_SESSION['mensagem_carrinho'] = 'Quantidade atualizada.';
 
                 } else {
@@ -65,7 +76,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-        // Diminuir quantidade
+
+        // Diminui a quantidade
+
         } elseif (isset($_POST['diminuir_quantidade'])) {
 
             if ($idProduto && isset($_SESSION['carrinho'][$idProduto])) {
@@ -75,6 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($_SESSION['carrinho'][$idProduto] <= 0) {
 
                     unset($_SESSION['carrinho'][$idProduto]);
+
                     $_SESSION['mensagem_carrinho'] = 'Produto removido do carrinho.';
 
                 } else {
@@ -84,17 +98,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-        // Remover produto inteiro
+
+        // Remove um produto
+
         } elseif (isset($_POST['remover_produto'])) {
 
             if ($idProduto && isset($_SESSION['carrinho'][$idProduto])) {
 
                 unset($_SESSION['carrinho'][$idProduto]);
+
                 $_SESSION['mensagem_carrinho'] = 'Produto removido do carrinho.';
 
             }
 
-        // Aplicar cupom de desconto
+
+        // Aplica um cupom
+
         } elseif (isset($_POST['aplicar_cupom'])) {
 
             $codigoCupom = strtoupper(trim($_POST['codigo_cupom'] ?? ''));
@@ -102,6 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($codigoCupom === '') {
 
                 unset($_SESSION['cupom_aplicado']);
+
                 $_SESSION['mensagem_carrinho'] = 'Digite um código de cupom.';
 
             } else {
@@ -132,16 +152,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!$cupom) {
 
                     unset($_SESSION['cupom_aplicado']);
+
                     $_SESSION['mensagem_carrinho'] = 'Cupom não encontrado.';
 
                 } elseif (!(int) $cupom['ativo']) {
 
                     unset($_SESSION['cupom_aplicado']);
+
                     $_SESSION['mensagem_carrinho'] = 'Este cupom está desativado.';
 
                 } elseif (!(int) $cupom['dentro_validade']) {
 
                     unset($_SESSION['cupom_aplicado']);
+
                     $_SESSION['mensagem_carrinho'] = 'Este cupom está fora do período de validade.';
 
                 } elseif (
@@ -150,6 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ) {
 
                     unset($_SESSION['cupom_aplicado']);
+
                     $_SESSION['mensagem_carrinho'] = 'Este cupom atingiu o limite de utilizações.';
 
                 } else {
@@ -164,10 +188,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-        // Limpar carrinho
+
+        // Esvazia o carrinho
+
         } elseif (isset($_POST['limpar_carrinho'])) {
 
             $_SESSION['carrinho'] = [];
+
             unset($_SESSION['cupom_aplicado']);
 
             $_SESSION['mensagem_carrinho'] = 'Carrinho esvaziado.';
@@ -179,7 +206,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-// Busca os produtos adicionados ao carrinho
+
+// 4. Busca os produtos do carrinho
+
 $produtosCarrinho = [];
 $totalCarrinho = 0;
 
@@ -200,6 +229,7 @@ if (!empty($_SESSION['carrinho'])) {
             AND ativo = 1";
 
     $consulta = $pdo->prepare($sql);
+
     $consulta->execute($idsProdutos);
 
     $produtosCarrinho = $consulta->fetchAll(PDO::FETCH_ASSOC);
@@ -209,21 +239,22 @@ if (!empty($_SESSION['carrinho'])) {
         $quantidade = $_SESSION['carrinho'][$produto['id']];
 
         $produto['quantidade'] = $quantidade;
+
         $produto['subtotal'] = $produto['preco'] * $quantidade;
 
         $totalCarrinho += $produto['subtotal'];
     }
 
     unset($produto);
-
 }
 
-// Valores iniciais do desconto
+
+// 5. Calcula o desconto do cupom
+
 $valorDesconto = 0;
 $totalComDesconto = $totalCarrinho;
 $cupomAtual = null;
 
-// Verifica o cupom aplicado
 if (!empty($_SESSION['cupom_aplicado']['id'])) {
 
     $consulta = $pdo->prepare("
@@ -287,7 +318,11 @@ if (!empty($_SESSION['cupom_aplicado']['id'])) {
     }
 }
 
+
+// 6. Prepara as informações da página
+
 $mensagem = $_SESSION['mensagem_carrinho'] ?? '';
+
 unset($_SESSION['mensagem_carrinho']);
 
 ?>
@@ -302,223 +337,342 @@ unset($_SESSION['mensagem_carrinho']);
 
     <title>Meu carrinho | NEXUS TECH</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
 
     <style>
+
+        /* 7. Configurações gerais */
 
         * {
             box-sizing: border-box;
         }
 
         body {
-            background: #080d18;
-            color: #e8eefc;
-            font-family: Arial, sans-serif;
             min-height: 100vh;
+            margin: 0;
+            background:
+                radial-gradient(ellipse at 50% 0%, rgba(113, 104, 232, .10), transparent 45%),
+                #090d17;
+            color: #f1f3ff;
+            font-family: Arial, sans-serif;
         }
 
+        a {
+            text-decoration: none;
+        }
+
+
+        /* 8. Menu superior */
+
         .navbar {
-            background: #0c1424;
-            border-bottom: 1px solid #1b2c49;
-            padding: 18px 0;
+            padding: 19px 0;
+            background: rgba(12, 17, 30, .94);
+            border-bottom: 1px solid rgba(151, 164, 205, .12);
         }
 
         .marca {
-            color: #35aaff;
+            color: #f4f5ff;
             font-size: 23px;
-            font-weight: bold;
+            font-weight: 800;
             letter-spacing: 1px;
-            text-decoration: none;
+        }
+
+        .marca span {
+            color: #a7a0ff;
         }
 
         .voltar {
-            color: #b7c5dc;
-            text-decoration: none;
-            transition: .2s;
+            color: #a3abc0;
+            transition: .2s ease;
         }
 
         .voltar:hover {
-            color: #35aaff;
+            color: #a7a0ff;
         }
 
+
+        /* 9. Área principal */
+
         .conteudo {
-            max-width: 1150px;
+            width: 100%;
+            max-width: 1180px;
             margin: auto;
-            padding: 55px 20px;
+            padding: 55px 20px 80px;
         }
 
         .titulo {
-            font-size: 32px;
-            font-weight: bold;
             margin-bottom: 8px;
+            font-size: 34px;
+            font-weight: 800;
+            letter-spacing: -1px;
         }
 
         .subtitulo {
-            color: #8293ad;
             margin-bottom: 35px;
+            color: #8e99b2;
+            font-size: 15px;
         }
+
+
+        /* 10. Cards dos produtos */
 
         .produto-card,
         .resumo-card,
         .vazio-card {
-            background: #101a2c;
-            border: 1px solid #1c2e4c;
-            border-radius: 14px;
+            background: linear-gradient(145deg, #141b2c, #101625);
+            border: 1px solid rgba(151, 164, 205, .13);
+            border-radius: 16px;
         }
 
         .produto-card {
-            padding: 20px;
+            padding: 21px;
             margin-bottom: 15px;
+            transition: .25s ease;
+        }
+
+        .produto-card:hover {
+            border-color: rgba(167, 160, 255, .35);
+            transform: translateY(-2px);
         }
 
         .imagem-produto {
+            display: block;
             width: 100%;
             max-width: 110px;
-            height: 100px;
+            height: 105px;
+            padding: 9px;
             object-fit: contain;
-            background: #0b1322;
-            border-radius: 10px;
-            padding: 8px;
+            background: #0b1120;
+            border: 1px solid rgba(151, 164, 205, .10);
+            border-radius: 12px;
         }
 
         .nome-produto {
-            font-size: 17px;
-            font-weight: bold;
-            color: #f1f5ff;
+            color: #f1f3ff;
+            font-size: 16px;
+            font-weight: 700;
         }
 
         .texto-secundario {
-            color: #8293ad;
-            font-size: 14px;
+            color: #8995ae;
+            font-size: 13px;
         }
 
         .preco {
-            color: #39aaff;
-            font-weight: bold;
+            color: #a7a0ff;
+            font-weight: 700;
         }
 
+
+        /* 11. Controle de quantidade */
+
+        .controle-quantidade {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            margin-top: 8px;
+        }
+
+        .controle-quantidade form {
+            margin: 0;
+        }
+
+        .btn-quantidade {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 33px;
+            height: 33px;
+            border: 1px solid rgba(167, 160, 255, .3);
+            border-radius: 9px;
+            background: rgba(139, 124, 255, .10);
+            color: #b8b1ff;
+            font-size: 19px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: .2s ease;
+        }
+
+        .btn-quantidade:hover {
+            background: #7168e8;
+            color: white;
+        }
+
+        .valor-quantidade {
+            min-width: 22px;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+        }
+
+
+        /* 12. Botões de ação */
+
+        .btn-remover {
+            padding: 9px 13px;
+            border: 1px solid rgba(251, 113, 133, .25);
+            border-radius: 9px;
+            background: rgba(251, 113, 133, .08);
+            color: #fb91a5;
+            font-size: 13px;
+            transition: .2s ease;
+        }
+
+        .btn-remover:hover {
+            background: rgba(251, 113, 133, .18);
+            color: white;
+        }
+
+        .btn-loja {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 18px;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #8176f5, #6258d9);
+            color: white;
+            font-weight: 700;
+            transition: .2s ease;
+        }
+
+        .btn-loja:hover {
+            background: linear-gradient(135deg, #948bff, #7168e8);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .btn-limpar {
+            padding: 9px 13px;
+            border: 1px solid rgba(251, 113, 133, .25);
+            border-radius: 9px;
+            background: transparent;
+            color: #fb91a5;
+            font-size: 13px;
+            transition: .2s ease;
+        }
+
+        .btn-limpar:hover {
+            background: rgba(251, 113, 133, .10);
+        }
+
+
+        /* 13. Resumo da compra */
+
         .resumo-card {
-            padding: 25px;
             position: sticky;
             top: 25px;
+            padding: 25px;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, .18);
+        }
+
+        .resumo-card h4 {
+            color: #f4f5ff;
+            font-size: 19px;
         }
 
         .linha-resumo {
             display: flex;
             justify-content: space-between;
-            margin: 15px 0;
-            color: #aab9d0;
-        }
-
-        .total {
-            border-top: 1px solid #263956;
-            padding-top: 18px;
-            font-size: 21px;
-            color: #fff;
-            font-weight: bold;
-        }
-
-        .controle-quantidade {
-            display: flex;
-            align-items: center;
             gap: 12px;
-            margin-top: 8px;
+            margin: 16px 0;
+            color: #a3abc0;
+            font-size: 14px;
         }
 
-        .btn-quantidade {
-            width: 34px;
-            height: 34px;
-            border: 1px solid #29496e;
-            background: #142640;
-            color: #45b2ff;
-            border-radius: 8px;
+        .linha-resumo.total {
+            padding-top: 19px;
+            border-top: 1px solid rgba(151, 164, 205, .16);
+            color: #f4f5ff;
             font-size: 20px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: .2s;
+            font-weight: 800;
         }
 
-        .btn-quantidade:hover {
-            background: #1685d5;
-            color: white;
+
+        /* 14. Campo de cupom */
+
+        .campo-cupom {
+            min-width: 0;
+            background: #0b1120 !important;
+            border: 1px solid rgba(151, 164, 205, .2) !important;
+            color: white !important;
         }
 
-        .valor-quantidade {
-            min-width: 20px;
-            text-align: center;
-            font-weight: bold;
-            color: white;
+        .campo-cupom::placeholder {
+            color: #69758d;
         }
 
-        .btn-remover {
-            background: #351a27;
-            border: 1px solid #633044;
-            color: #ff829b;
-            border-radius: 8px;
-            padding: 8px 12px;
-            font-size: 13px;
+        .campo-cupom:focus {
+            border-color: #8b7cff !important;
+            box-shadow: 0 0 0 3px rgba(139, 124, 255, .12) !important;
         }
 
-        .btn-remover:hover {
-            background: #572235;
-            color: #fff;
-        }
 
-        .btn-loja {
-            background: #1685d5;
-            color: white;
-            border: none;
-            border-radius: 9px;
-            padding: 12px 18px;
-            text-decoration: none;
-            display: inline-block;
-            transition: .2s;
-        }
-
-        .btn-loja:hover {
-            background: #0870bb;
-            color: white;
-        }
-
-        .btn-limpar {
-            background: transparent;
-            border: 1px solid #633044;
-            color: #ff829b;
-            border-radius: 8px;
-            padding: 9px 13px;
-        }
-
-        .btn-limpar:hover {
-            background: #351a27;
-        }
+        /* 15. Carrinho vazio */
 
         .vazio-card {
-            padding: 60px 20px;
+            padding: 65px 20px;
             text-align: center;
         }
 
         .icone-vazio {
-            font-size: 55px;
-            color: #328fd4;
             margin-bottom: 20px;
+            font-size: 55px;
+        }
+
+        .vazio-card h3 {
+            color: #f1f3ff;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .vazio-card p {
+            margin-bottom: 20px;
+        }
+
+
+        /* 16. Ajustes para telas menores */
+
+        @media (max-width: 991px) {
+
+            .resumo-card {
+                position: static;
+            }
+
         }
 
         @media (max-width: 576px) {
 
-            .titulo {
-                font-size: 26px;
+            .conteudo {
+                padding: 38px 15px 55px;
             }
 
-            .imagem-produto {
-                max-width: 75px;
-                height: 75px;
+            .titulo {
+                font-size: 27px;
             }
 
             .produto-card {
                 padding: 14px;
+            }
+
+            .imagem-produto {
+                max-width: 78px;
+                height: 78px;
+            }
+
+            .nome-produto {
+                font-size: 14px;
+            }
+
+            .resumo-card {
+                padding: 20px;
+            }
+
+            .btn-loja {
+                padding: 11px 13px;
             }
 
         }
@@ -526,59 +680,66 @@ unset($_SESSION['mensagem_carrinho']);
     </style>
 
 </head>
-<script>
-document.querySelector('form[action="finalizar_compra.php"]')
-    .addEventListener('submit', function () {
-
-        const botao = document.getElementById('botao-finalizar');
-
-        botao.disabled = true;
-        botao.textContent = 'Processando compra...';
-
-    });
-</script>
 
 <body>
+
+    <!-- 17. Menu superior -->
 
     <nav class="navbar">
 
         <div class="container d-flex justify-content-between align-items-center">
 
             <a href="index.php" class="marca">
-                NEXUS TECH
+                NEXUS<span>TECH</span>
             </a>
 
             <a href="index.php" class="voltar">
-                ← Voltar à loja
+                 Voltar à loja
             </a>
 
         </div>
 
     </nav>
 
+
+    <!-- 18. Conteúdo do carrinho -->
+
     <main class="conteudo">
 
-        <h1 class="titulo">Meu carrinho</h1>
+        <h1 class="titulo">
+            Meu carrinho
+        </h1>
 
         <p class="subtitulo">
             Confira seus produtos antes de continuar.
         </p>
 
+
+        <!-- Mensagens do carrinho -->
+
         <?php if ($mensagem): ?>
 
             <div class="alert alert-info">
-                <?= htmlspecialchars($mensagem) ?>
+                <?= htmlspecialchars($mensagem, ENT_QUOTES, 'UTF-8') ?>
             </div>
 
         <?php endif; ?>
 
+
         <?php if (empty($produtosCarrinho)): ?>
+
+
+            <!-- Carrinho vazio -->
 
             <div class="vazio-card">
 
-                <div class="icone-vazio">🛒</div>
+                <div class="icone-vazio">
+                    🛒
+                </div>
 
-                <h3>Seu carrinho está vazio</h3>
+                <h3>
+                    Seu carrinho está vazio
+                </h3>
 
                 <p class="texto-secundario mt-2">
                     Explore nossa loja e encontre algo interessante.
@@ -590,9 +751,13 @@ document.querySelector('form[action="finalizar_compra.php"]')
 
             </div>
 
+
         <?php else: ?>
 
+
             <div class="row g-4">
+
+                <!-- 19. Lista de produtos -->
 
                 <div class="col-lg-8">
 
@@ -607,9 +772,9 @@ document.querySelector('form[action="finalizar_compra.php"]')
                                     <?php if (!empty($produto['imagem'])): ?>
 
                                         <img
-                                            src="<?= htmlspecialchars($produto['imagem']) ?>"
+                                            src="<?= htmlspecialchars($produto['imagem'], ENT_QUOTES, 'UTF-8') ?>"
                                             class="imagem-produto"
-                                            alt="<?= htmlspecialchars($produto['nome']) ?>"
+                                            alt="<?= htmlspecialchars($produto['nome'], ENT_QUOTES, 'UTF-8') ?>"
                                         >
 
                                     <?php else: ?>
@@ -622,10 +787,11 @@ document.querySelector('form[action="finalizar_compra.php"]')
 
                                 </div>
 
+
                                 <div class="col-9 col-md-4">
 
                                     <div class="nome-produto">
-                                        <?= htmlspecialchars($produto['nome']) ?>
+                                        <?= htmlspecialchars($produto['nome'], ENT_QUOTES, 'UTF-8') ?>
                                     </div>
 
                                     <div class="texto-secundario mt-1">
@@ -643,7 +809,7 @@ document.querySelector('form[action="finalizar_compra.php"]')
                                             <input
                                                 type="hidden"
                                                 name="token_carrinho"
-                                                value="<?= htmlspecialchars($_SESSION['token_carrinho']) ?>"
+                                                value="<?= htmlspecialchars($_SESSION['token_carrinho'], ENT_QUOTES, 'UTF-8') ?>"
                                             >
 
                                             <input
@@ -663,16 +829,18 @@ document.querySelector('form[action="finalizar_compra.php"]')
 
                                         </form>
 
+
                                         <span class="valor-quantidade">
                                             <?= (int) $produto['quantidade'] ?>
                                         </span>
+
 
                                         <form method="POST">
 
                                             <input
                                                 type="hidden"
                                                 name="token_carrinho"
-                                                value="<?= htmlspecialchars($_SESSION['token_carrinho']) ?>"
+                                                value="<?= htmlspecialchars($_SESSION['token_carrinho'], ENT_QUOTES, 'UTF-8') ?>"
                                             >
 
                                             <input
@@ -694,11 +862,12 @@ document.querySelector('form[action="finalizar_compra.php"]')
 
                                     </div>
 
-                                    <div class="texto-secundario mt-1">
+                                    <div class="texto-secundario mt-2">
                                         Estoque: <?= (int) $produto['estoque'] ?>
                                     </div>
 
                                 </div>
+
 
                                 <div class="col-12 col-md-6 text-md-end">
 
@@ -711,7 +880,7 @@ document.querySelector('form[action="finalizar_compra.php"]')
                                         <input
                                             type="hidden"
                                             name="token_carrinho"
-                                            value="<?= htmlspecialchars($_SESSION['token_carrinho']) ?>"
+                                            value="<?= htmlspecialchars($_SESSION['token_carrinho'], ENT_QUOTES, 'UTF-8') ?>"
                                         >
 
                                         <input
@@ -738,10 +907,13 @@ document.querySelector('form[action="finalizar_compra.php"]')
 
                     <?php endforeach; ?>
 
+
+                    <!-- 20. Ações da lista -->
+
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mt-4">
 
                         <a href="index.php" class="voltar">
-                            ← Continuar comprando
+                             Continuar comprando
                         </a>
 
                         <form method="POST">
@@ -749,7 +921,7 @@ document.querySelector('form[action="finalizar_compra.php"]')
                             <input
                                 type="hidden"
                                 name="token_carrinho"
-                                value="<?= htmlspecialchars($_SESSION['token_carrinho']) ?>"
+                                value="<?= htmlspecialchars($_SESSION['token_carrinho'], ENT_QUOTES, 'UTF-8') ?>"
                             >
 
                             <button
@@ -767,6 +939,9 @@ document.querySelector('form[action="finalizar_compra.php"]')
 
                 </div>
 
+
+                <!-- 21. Resumo do pedido -->
+
                 <div class="col-lg-4">
 
                     <div class="resumo-card">
@@ -776,16 +951,27 @@ document.querySelector('form[action="finalizar_compra.php"]')
                         </h4>
 
                         <div class="linha-resumo">
+
                             <span>Produtos</span>
-                            <span><?= count($produtosCarrinho) ?></span>
+
+                            <span>
+                                <?= count($produtosCarrinho) ?>
+                            </span>
+
                         </div>
 
                         <div class="linha-resumo">
+
                             <span>Quantidade de itens</span>
+
                             <span>
                                 <?= array_sum(array_column($produtosCarrinho, 'quantidade')) ?>
                             </span>
+
                         </div>
+
+
+                        <!-- Cupom de desconto -->
 
                         <div class="mt-4 mb-3">
 
@@ -798,17 +984,16 @@ document.querySelector('form[action="finalizar_compra.php"]')
                                 <input
                                     type="hidden"
                                     name="token_carrinho"
-                                    value="<?= htmlspecialchars($_SESSION['token_carrinho']) ?>"
+                                    value="<?= htmlspecialchars($_SESSION['token_carrinho'], ENT_QUOTES, 'UTF-8') ?>"
                                 >
 
                                 <input
                                     type="text"
                                     name="codigo_cupom"
                                     id="codigo_cupom"
-                                    class="form-control"
+                                    class="form-control campo-cupom"
                                     placeholder="Digite seu cupom"
                                     value="<?= htmlspecialchars($_SESSION['cupom_aplicado']['codigo'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
-                                    style="background: #0b1322; border: 1px solid #29496e; color: white;"
                                     maxlength="50"
                                     required
                                 >
@@ -825,32 +1010,47 @@ document.querySelector('form[action="finalizar_compra.php"]')
 
                         </div>
 
+
+                        <!-- Valores da compra -->
+
                         <div class="linha-resumo">
+
                             <span>Subtotal</span>
+
                             <span>
                                 <?= number_format($totalCarrinho, 2, ',', '.') ?> NC
                             </span>
+
                         </div>
+
 
                         <?php if ($valorDesconto > 0): ?>
 
                             <div class="linha-resumo">
+
                                 <span>Desconto</span>
 
-                                <span style="color: #39c98a;">
+                                <span style="color: #4ade80;">
                                     - <?= number_format($valorDesconto, 2, ',', '.') ?> NC
                                 </span>
+
                             </div>
 
                         <?php endif; ?>
 
+
                         <div class="linha-resumo total">
+
                             <span>Total</span>
 
                             <span class="preco">
                                 <?= number_format($totalComDesconto, 2, ',', '.') ?> NC
                             </span>
+
                         </div>
+
+
+                        <!-- Finalização da compra -->
 
                         <form action="finalizar_compra.php" method="POST">
 
@@ -860,13 +1060,13 @@ document.querySelector('form[action="finalizar_compra.php"]')
                                 value="<?= htmlspecialchars($_SESSION['token_finalizar_compra'], ENT_QUOTES, 'UTF-8') ?>"
                             >
 
-                          <button
-    type="submit"
-    class="btn-loja w-100 mt-3"
-    id="botao-finalizar"
->
-    Finalizar compra
-</button>
+                            <button
+                                type="submit"
+                                class="btn-loja w-100 mt-3"
+                                id="botao-finalizar"
+                            >
+                                Finalizar compra
+                            </button>
 
                         </form>
 
@@ -883,6 +1083,30 @@ document.querySelector('form[action="finalizar_compra.php"]')
         <?php endif; ?>
 
     </main>
+
+
+    <!-- 22. Scripts -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+
+        const formularioCompra = document.querySelector('form[action="finalizar_compra.php"]');
+
+        if (formularioCompra) {
+
+            formularioCompra.addEventListener('submit', function () {
+
+                const botao = document.getElementById('botao-finalizar');
+
+                botao.disabled = true;
+                botao.textContent = 'Processando compra...';
+
+            });
+
+        }
+
+    </script>
 
 </body>
 

@@ -1,53 +1,67 @@
 
 <?php
 
+// 1. Inicia a sessão e conecta ao banco
+
 require_once __DIR__ . '/cliente/proteger_cliente.php';
 
 $pdo = require __DIR__ . '/config/database.php';
 
 $usuarioId = (int) $_SESSION['usuario_id'];
 
-// Garante que o carrinho exista.
+
+// 2. Prepara o carrinho e o token de segurança
+
 if (!isset($_SESSION['carrinho'])) {
     $_SESSION['carrinho'] = [];
 }
 
-// Garante que exista um token de segurança.
 if (empty($_SESSION['token_finalizar_compra'])) {
     $_SESSION['token_finalizar_compra'] = bin2hex(random_bytes(32));
 }
 
-// Só aceita compras enviadas por POST.
+
+// 3. Verifica o método da solicitação
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: carrinho.php');
     exit;
 }
 
-// Confere o token de segurança.
+
+// 4. Valida o token de segurança
+
 $token = $_POST['token_finalizar_compra'] ?? '';
 
 if (
     !is_string($token) ||
     !hash_equals($_SESSION['token_finalizar_compra'], $token)
 ) {
+
     $_SESSION['mensagem_carrinho'] = 'Solicitação inválida. Tente novamente.';
-    header('Location: carrinho.php');
-    exit;
-}
-// Renova o token para impedir a reutilização do mesmo envio.
-$_SESSION['token_finalizar_compra'] = bin2hex(random_bytes(32));
-// Confere se existem produtos no carrinho.
-if (empty($_SESSION['carrinho'])) {
-    $_SESSION['mensagem_carrinho'] = 'Seu carrinho está vazio.';
+
     header('Location: carrinho.php');
     exit;
 }
 
-/*
-|--------------------------------------------------------------------------
-| Converte valores monetários para centavos.
-|--------------------------------------------------------------------------
-*/
+
+// Renova o token para impedir a reutilização do mesmo envio
+
+$_SESSION['token_finalizar_compra'] = bin2hex(random_bytes(32));
+
+
+// 5. Verifica se existem produtos no carrinho
+
+if (empty($_SESSION['carrinho'])) {
+
+    $_SESSION['mensagem_carrinho'] = 'Seu carrinho está vazio.';
+
+    header('Location: carrinho.php');
+    exit;
+}
+
+
+// 6. Converte valores monetários para centavos
 
 function converterParaCentavos($valor)
 {
@@ -66,15 +80,13 @@ function converterParaCentavos($valor)
     return ($inteiro * 100) + $centavos;
 }
 
-/*
-|--------------------------------------------------------------------------
-| Converte centavos para o formato decimal do banco.
-|--------------------------------------------------------------------------
-*/
+
+// 7. Converte centavos para o formato decimal do banco
 
 function converterParaDecimal($centavos)
 {
     $inteiro = intdiv($centavos, 100);
+
     $decimal = $centavos % 100;
 
     return $inteiro . '.' . str_pad(
@@ -85,24 +97,28 @@ function converterParaDecimal($centavos)
     );
 }
 
+
 try {
 
-    // Organiza os IDs para bloquear os produtos em ordem.
+    // 8. Organiza os produtos do carrinho
+
     $carrinho = $_SESSION['carrinho'];
 
     $idsProdutos = array_keys($carrinho);
 
     sort($idsProdutos, SORT_NUMERIC);
 
+
+    // 9. Inicia a transação
+
     $pdo->beginTransaction();
 
-    /*
-    |--------------------------------------------------------------------------
-    | 1. Bloqueia e consulta a carteira do cliente.
-    |--------------------------------------------------------------------------
-    */
 
-    $sql = "SELECT id, saldo
+    // 10. Consulta e bloqueia a carteira do cliente
+
+    $sql = "SELECT
+                id,
+                saldo
             FROM carteira_coins
             WHERE usuario_id = :usuario_id
             LIMIT 1
@@ -124,13 +140,11 @@ try {
 
     $saldoAnterior = converterParaCentavos($carteira['saldo']);
 
-    /*
-    |--------------------------------------------------------------------------
-    | 2. Consulta produtos e verifica o estoque.
-    |--------------------------------------------------------------------------
-    */
+
+    // 11. Consulta os produtos e verifica o estoque
 
     $produtosCompra = [];
+
     $totalCentavos = 0;
 
     foreach ($idsProdutos as $idProduto) {
@@ -153,7 +167,14 @@ try {
             throw new RuntimeException('Existe uma quantidade inválida no carrinho.');
         }
 
-        $sql = "SELECT id, nome, preco, estoque
+
+        // Busca e bloqueia o produto durante a compra
+
+        $sql = "SELECT
+                    id,
+                    nome,
+                    preco,
+                    estoque
                 FROM produtos
                 WHERE id = :id
                 AND ativo = 1
@@ -174,11 +195,17 @@ try {
             );
         }
 
+
+        // Confere a quantidade disponível
+
         if ($quantidade > (int) $produto['estoque']) {
             throw new RuntimeException(
                 'Estoque insuficiente para o produto: ' . $produto['nome']
             );
         }
+
+
+        // Calcula o subtotal do produto
 
         $precoCentavos = converterParaCentavos($produto['preco']);
 
@@ -186,28 +213,32 @@ try {
 
         $totalCentavos += $subtotalCentavos;
 
+
+        // Guarda as informações do produto
+
         $produtosCompra[] = [
             'id' => (int) $produto['id'],
             'nome' => $produto['nome'],
             'preco' => $precoCentavos,
             'quantidade' => $quantidade
         ];
+
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | 3. Valida e calcula o desconto do cupom.
-    |--------------------------------------------------------------------------
-    */
+
+    // 12. Valida e calcula o desconto do cupom
 
     $cupomId = null;
+
     $descontoCentavos = 0;
 
     if (!empty($_SESSION['cupom_aplicado']['id'])) {
 
         $cupomId = (int) $_SESSION['cupom_aplicado']['id'];
 
-        // Bloqueia o cupom durante a compra.
+
+        // Bloqueia o cupom durante a compra
+
         $sql = "SELECT
                     id,
                     codigo,
@@ -237,6 +268,9 @@ try {
             );
         }
 
+
+        // Verifica o limite de utilizações
+
         if (
             $cupom['limite_utilizacoes'] !== null &&
             (int) $cupom['utilizacoes'] >= (int) $cupom['limite_utilizacoes']
@@ -246,7 +280,9 @@ try {
             );
         }
 
-        // Calcula o desconto em centavos.
+
+        // Calcula o desconto em centavos
+
         if ($cupom['tipo_desconto'] === 'porcentagem') {
 
             $descontoCentavos = (int) round(
@@ -258,24 +294,26 @@ try {
             $descontoCentavos = converterParaCentavos(
                 $cupom['valor_desconto']
             );
+
         }
 
-        // Impede descontos negativos ou maiores que a compra.
+
+        // Impede descontos negativos ou maiores que a compra
+
         $descontoCentavos = min(
             max(0, $descontoCentavos),
             $totalCentavos
         );
 
-        // Aplica o desconto ao total.
+
+        // Aplica o desconto ao total
+
         $totalCentavos -= $descontoCentavos;
+
     }
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | 3. Confere o saldo disponível.
-    |--------------------------------------------------------------------------
-    */
+    // 13. Verifica o valor total e o saldo disponível
 
     if ($totalCentavos <= 0) {
         throw new RuntimeException('O valor da compra é inválido.');
@@ -289,11 +327,8 @@ try {
 
     $saldoNovo = $saldoAnterior - $totalCentavos;
 
-    /*
-    |--------------------------------------------------------------------------
-    | 4. Registra o pedido.
-    |--------------------------------------------------------------------------
-    */
+
+    // 14. Registra o pedido
 
     $sql = "INSERT INTO pedidos (
                 usuario_id,
@@ -318,15 +353,14 @@ try {
 
     $pedidoId = (int) $pdo->lastInsertId();
 
-    /*
-    |--------------------------------------------------------------------------
-    | Registra a utilização do cupom.
-    |--------------------------------------------------------------------------
-    */
+
+    // 15. Registra a utilização do cupom
 
     if ($cupomId !== null) {
 
-        // Incrementa o contador de utilizações.
+
+        // Atualiza a quantidade de utilizações
+
         $sql = "UPDATE cupons
                 SET utilizacoes = utilizacoes + 1
                 WHERE id = :id
@@ -347,7 +381,9 @@ try {
             );
         }
 
-        // Guarda o desconto utilizado no pedido.
+
+        // Guarda o desconto utilizado no pedido
+
         $sql = "INSERT INTO uso_cupons (
                     cupom_id,
                     usuario_id,
@@ -368,18 +404,17 @@ try {
             ':pedido_id' => $pedidoId,
             ':valor_desconto' => converterParaDecimal($descontoCentavos)
         ]);
+
     }
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | 5. Registra os produtos e atualiza o estoque.
-    |--------------------------------------------------------------------------
-    */
+    // 16. Registra os produtos e atualiza o estoque
 
     foreach ($produtosCompra as $produto) {
 
-        // Registra o item comprado.
+
+        // Registra o produto no pedido
+
         $sql = "INSERT INTO itens_pedido (
                     pedido_id,
                     produto_id,
@@ -404,7 +439,9 @@ try {
             ':preco_unitario' => converterParaDecimal($produto['preco'])
         ]);
 
-        // Retira a quantidade comprada do estoque.
+
+        // Retira a quantidade comprada do estoque
+
         $sql = "UPDATE produtos
                 SET estoque = estoque - :quantidade
                 WHERE id = :id
@@ -424,13 +461,11 @@ try {
                 'Não foi possível atualizar o estoque de um produto.'
             );
         }
+
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | 6. Atualiza o saldo da carteira.
-    |--------------------------------------------------------------------------
-    */
+
+    // 17. Atualiza o saldo da carteira
 
     $sql = "UPDATE carteira_coins
             SET saldo = :saldo_novo
@@ -443,11 +478,8 @@ try {
         ':carteira_id' => $carteiraId
     ]);
 
-    /*
-    |--------------------------------------------------------------------------
-    | 7. Registra a movimentação financeira.
-    |--------------------------------------------------------------------------
-    */
+
+    // 18. Registra a movimentação financeira
 
     $sql = "INSERT INTO movimentacoes_coins (
                 carteira_id,
@@ -476,18 +508,20 @@ try {
         ':descricao' => 'Compra realizada - Pedido #' . $pedidoId
     ]);
 
-    /*
-    |--------------------------------------------------------------------------
-    | 8. Confirma todas as operações.
-    |--------------------------------------------------------------------------
-    */
+
+    // 19. Confirma todas as operações
 
     $pdo->commit();
 
-    // Só limpa o carrinho depois que a compra foi confirmada.
+
+    // 20. Limpa o carrinho após a confirmação
+
     $_SESSION['carrinho'] = [];
+
     unset($_SESSION['cupom_aplicado']);
 
+
+    // Prepara a mensagem de confirmação
 
     $_SESSION['mensagem_carrinho'] =
         'Compra realizada com sucesso! Pedido #' . $pedidoId .
@@ -498,7 +532,10 @@ try {
             '.'
         ) . ' NC.';
 
+
 } catch (RuntimeException $erro) {
+
+    // 21. Trata erros esperados
 
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
@@ -506,7 +543,10 @@ try {
 
     $_SESSION['mensagem_carrinho'] = $erro->getMessage();
 
+
 } catch (Throwable $erro) {
+
+    // 22. Trata erros inesperados
 
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
@@ -514,7 +554,11 @@ try {
 
     $_SESSION['mensagem_carrinho'] =
         'Não foi possível finalizar sua compra. Tente novamente.';
+
 }
+
+
+// 23. Retorna ao carrinho
 
 header('Location: carrinho.php');
 exit;

@@ -1,13 +1,14 @@
 
 <?php
 
+// 1. Verifica o acesso e conecta ao banco
 require_once __DIR__ . '/proteger_cliente.php';
 
 $pdo = require __DIR__ . '/../config/database.php';
 
-$usuarioId = $_SESSION['usuario_id'];
+$usuarioId = (int) $_SESSION['usuario_id'];
 
-// Busca a carteira do cliente.
+// 2. Busca a carteira do cliente
 $sql = "SELECT id, saldo
         FROM carteira_coins
         WHERE usuario_id = :usuario_id
@@ -21,13 +22,14 @@ $consulta->execute([
 
 $carteira = $consulta->fetch();
 
+// 3. Verifica se a carteira existe
 if (!$carteira) {
     exit('Carteira não encontrada.');
 }
 
 $carteiraId = $carteira['id'];
 
-// Busca o total de Coins recebidos e gastos.
+// 4. Busca o total de Coins recebidos e gastos
 $sql = "SELECT
             COALESCE(SUM(CASE WHEN tipo = 'credito' THEN quantidade ELSE 0 END), 0) AS total_recebido,
             COALESCE(SUM(CASE WHEN tipo = 'debito' THEN quantidade ELSE 0 END), 0) AS total_gasto
@@ -42,7 +44,7 @@ $consulta->execute([
 
 $resumo = $consulta->fetch();
 
-// Busca o histórico de movimentações.
+// 5. Busca o histórico de movimentações
 $sql = "SELECT tipo, quantidade, saldo_anterior, saldo_novo, descricao, criado_em
         FROM movimentacoes_coins
         WHERE carteira_id = :carteira_id
@@ -54,8 +56,9 @@ $consulta->execute([
     ':carteira_id' => $carteiraId
 ]);
 
-$movimentacoes = $consulta->fetchAll();
+$movimentacoes = $consulta->fetchAll(PDO::FETCH_ASSOC);
 
+// 6. Formata os valores em NEXUS Coins
 function formatarCoins($valor)
 {
     return number_format((float) $valor, 2, ',', '.');
@@ -68,14 +71,22 @@ function formatarCoins($valor)
 
 <head>
 
+    <!-- 7. Configurações da página -->
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Minha Carteira | NEXUS TECH</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <!-- 8. Estilos da página -->
 
     <style>
+
         * {
             box-sizing: border-box;
         }
@@ -87,6 +98,8 @@ function formatarCoins($valor)
             color: #fff;
             font-family: Arial, sans-serif;
         }
+
+        /* Cabeçalho */
 
         header {
             background: #101a2b;
@@ -115,6 +128,8 @@ function formatarCoins($valor)
             color: #38a5ff;
         }
 
+        /* Conteúdo principal */
+
         .conteudo {
             width: 90%;
             max-width: 1100px;
@@ -133,6 +148,8 @@ function formatarCoins($valor)
         .titulo p {
             color: #94a3b8;
         }
+
+        /* Cartão do saldo */
 
         .saldo-card {
             position: relative;
@@ -176,6 +193,8 @@ function formatarCoins($valor)
             margin-top: 10px;
         }
 
+        /* Cartões de resumo */
+
         .resumo-card {
             height: 100%;
             padding: 22px;
@@ -201,6 +220,8 @@ function formatarCoins($valor)
         .gasto {
             color: #ff7777;
         }
+
+        /* Histórico de movimentações */
 
         .historico {
             margin-top: 30px;
@@ -271,11 +292,15 @@ function formatarCoins($valor)
             color: #ff7777;
         }
 
+        /* Histórico vazio */
+
         .vazio {
             text-align: center;
             color: #94a3b8;
             padding: 35px 10px;
         }
+
+        /* Botão de retorno */
 
         .btn-voltar {
             display: inline-block;
@@ -291,6 +316,8 @@ function formatarCoins($valor)
             background: #0872ce;
             color: white;
         }
+
+        /* Ajustes para telas menores */
 
         @media (max-width: 600px) {
 
@@ -318,22 +345,30 @@ function formatarCoins($valor)
             .movimentacao {
                 align-items: flex-start;
             }
+
         }
+
     </style>
 
 </head>
 
 <body>
 
+    <!-- 9. Cabeçalho -->
+
     <header>
 
-        <a href="../index.php" class="logo">NEXUS TECH</a>
+        <a href="../index.php" class="logo">
+            NEXUS TECH
+        </a>
 
         <a href="minha_conta.php" class="voltar">
             Minha conta
         </a>
 
     </header>
+
+    <!-- 10. Conteúdo da carteira -->
 
     <main class="conteudo">
 
@@ -347,7 +382,7 @@ function formatarCoins($valor)
 
         </div>
 
-        <!-- Saldo principal -->
+        <!-- 11. Saldo principal -->
 
         <div class="saldo-card">
 
@@ -356,8 +391,11 @@ function formatarCoins($valor)
             </div>
 
             <div class="saldo-valor">
+
                 <?= formatarCoins($carteira['saldo']) ?>
+
                 <span>NC</span>
+
             </div>
 
             <div class="saldo-descricao">
@@ -366,7 +404,7 @@ function formatarCoins($valor)
 
         </div>
 
-        <!-- Resumo -->
+        <!-- 12. Resumo financeiro -->
 
         <div class="row g-3">
 
@@ -400,13 +438,15 @@ function formatarCoins($valor)
 
         </div>
 
-        <!-- Histórico -->
+        <!-- 13. Histórico de movimentações -->
 
         <div class="historico">
 
             <h4>Histórico de movimentações</h4>
 
             <?php if (count($movimentacoes) > 0): ?>
+
+                <!-- 14. Lista as movimentações -->
 
                 <?php foreach ($movimentacoes as $movimentacao): ?>
 
@@ -415,15 +455,13 @@ function formatarCoins($valor)
                         <div class="mov-info">
 
                             <div class="mov-icone">
-
                                 <?= $movimentacao['tipo'] === 'credito' ? '↙' : '↗' ?>
-
                             </div>
 
                             <div>
 
                                 <div class="mov-descricao">
-                                    <?= htmlspecialchars($movimentacao['descricao']) ?>
+                                    <?= htmlspecialchars($movimentacao['descricao'], ENT_QUOTES, 'UTF-8') ?>
                                 </div>
 
                                 <span class="mov-data">
@@ -434,9 +472,12 @@ function formatarCoins($valor)
 
                         </div>
 
-                        <div class="mov-valor <?= $movimentacao['tipo'] ?>">
+                        <div class="mov-valor <?= htmlspecialchars($movimentacao['tipo'], ENT_QUOTES, 'UTF-8') ?>">
+
                             <?= $movimentacao['tipo'] === 'credito' ? '+' : '-' ?>
+
                             <?= formatarCoins($movimentacao['quantidade']) ?> NC
+
                         </div>
 
                     </div>
@@ -444,6 +485,8 @@ function formatarCoins($valor)
                 <?php endforeach; ?>
 
             <?php else: ?>
+
+                <!-- 15. Mensagem quando não existem movimentações -->
 
                 <div class="vazio">
                     Nenhuma movimentação encontrada.
@@ -453,6 +496,8 @@ function formatarCoins($valor)
 
         </div>
 
+        <!-- 16. Botão para voltar à conta -->
+
         <a href="minha_conta.php" class="btn-voltar">
             Voltar para minha conta
         </a>
@@ -460,4 +505,5 @@ function formatarCoins($valor)
     </main>
 
 </body>
+
 </html>

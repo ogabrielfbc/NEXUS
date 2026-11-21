@@ -1,22 +1,26 @@
 
 <?php
 
+// 1. Inicia a sessão e conecta ao banco
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 $pdo = require __DIR__ . '/../config/database.php';
 
+// 2. Inicializa as mensagens e os campos
 $mensagem = '';
 $tipoMensagem = '';
 
 $nome = '';
 $email = '';
 
+// 3. Cria o token de segurança
 if (empty($_SESSION['token_cadastro'])) {
     $_SESSION['token_cadastro'] = bin2hex(random_bytes(32));
 }
 
+// 4. Processa o formulário
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $nome = trim($_POST['nome'] ?? '');
@@ -25,31 +29,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $confirmarSenha = $_POST['confirmar_senha'] ?? '';
     $token = $_POST['token'] ?? '';
 
-    if (!hash_equals($_SESSION['token_cadastro'], $token)) {
+    // 5. Verifica o token de segurança
+    if (
+        !is_string($token) ||
+        !hash_equals($_SESSION['token_cadastro'], $token)
+    ) {
 
         $mensagem = 'Solicitação inválida. Atualize a página e tente novamente.';
         $tipoMensagem = 'erro';
 
-    } elseif (empty($nome) || empty($email) || empty($senha) || empty($confirmarSenha)) {
+    // 6. Verifica os campos obrigatórios
+    } elseif (
+        empty($nome) ||
+        empty($email) ||
+        empty($senha) ||
+        empty($confirmarSenha)
+    ) {
 
         $mensagem = 'Preencha todos os campos.';
         $tipoMensagem = 'erro';
 
+    // 7. Valida o nome
     } elseif (strlen($nome) > 120) {
 
         $mensagem = 'O nome deve ter no máximo 120 caracteres.';
         $tipoMensagem = 'erro';
 
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 150) {
+    // 8. Valida o e-mail
+    } elseif (
+        !filter_var($email, FILTER_VALIDATE_EMAIL) ||
+        strlen($email) > 150
+    ) {
 
         $mensagem = 'Digite um endereço de e-mail válido.';
         $tipoMensagem = 'erro';
 
+    // 9. Valida a senha
     } elseif (strlen($senha) < 8) {
 
         $mensagem = 'A senha deve ter pelo menos 8 caracteres.';
         $tipoMensagem = 'erro';
 
+    // 10. Confirma se as senhas são iguais
     } elseif ($senha !== $confirmarSenha) {
 
         $mensagem = 'As senhas não coincidem.';
@@ -59,9 +80,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         try {
 
-            $sql = "SELECT id FROM usuarios WHERE email = :email LIMIT 1";
+            // 11. Verifica se o e-mail já está cadastrado
+            $sql = "SELECT id
+                    FROM usuarios
+                    WHERE email = :email
+                    LIMIT 1";
 
             $consulta = $pdo->prepare($sql);
+
             $consulta->execute([
                 ':email' => $email
             ]);
@@ -75,9 +101,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             } else {
 
+                // 12. Inicia a transação
                 $pdo->beginTransaction();
 
-                // Cria o usuário.
+                // 13. Cria o usuário
                 $senhaCriptografada = password_hash($senha, PASSWORD_DEFAULT);
 
                 $sql = "INSERT INTO usuarios
@@ -95,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $usuarioId = $pdo->lastInsertId();
 
-                // Cria a carteira com 10.000 Coins.
+                // 14. Cria a carteira com 10.000 Coins
                 $saldoInicial = 10000;
 
                 $sql = "INSERT INTO carteira_coins
@@ -112,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $carteiraId = $pdo->lastInsertId();
 
-                // Registra o bônus de boas-vindas.
+                // 15. Registra o bônus de boas-vindas
                 $sql = "INSERT INTO movimentacoes_coins
                         (
                             carteira_id,
@@ -140,20 +167,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':saldo_novo' => $saldoInicial
                 ]);
 
-                // Confirma todas as operações.
+                // 16. Confirma todas as operações
                 $pdo->commit();
 
+                // 17. Exibe a confirmação do cadastro
                 $mensagem = 'Cadastro realizado com sucesso! Você recebeu 10.000 NEXUS Coins.';
                 $tipoMensagem = 'sucesso';
 
                 $nome = '';
                 $email = '';
 
+                // Gera um novo token
                 $_SESSION['token_cadastro'] = bin2hex(random_bytes(32));
             }
 
         } catch (PDOException $erro) {
 
+            // 18. Desfaz as operações caso ocorra algum erro
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
             }
@@ -171,14 +201,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <head>
 
+    <!-- 19. Configurações da página -->
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Criar conta | NEXUS TECH</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <!-- 20. Estilos da página -->
 
     <style>
+
         * {
             box-sizing: border-box;
         }
@@ -195,6 +233,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-family: Arial, sans-serif;
         }
 
+        /* Cartão de cadastro */
+
         .container-cadastro {
             width: 100%;
             max-width: 460px;
@@ -204,6 +244,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border-radius: 16px;
             box-shadow: 0 15px 50px rgba(0, 0, 0, 0.35);
         }
+
+        /* Logo e subtítulo */
 
         .logo {
             text-align: center;
@@ -219,6 +261,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color: #94a3b8;
             margin-bottom: 20px;
         }
+
+        /* Bônus de boas-vindas */
 
         .bonus {
             text-align: center;
@@ -240,6 +284,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-size: 12px;
             color: #94a3b8;
         }
+
+        /* Campos do formulário */
 
         .form-label {
             color: #dbeafe;
@@ -264,6 +310,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color: #64748b;
         }
 
+        /* Botão de cadastro */
+
         .btn-cadastro {
             width: 100%;
             padding: 12px;
@@ -279,6 +327,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .btn-cadastro:hover {
             background: #0872ce;
         }
+
+        /* Mensagens */
 
         .mensagem {
             padding: 12px;
@@ -299,6 +349,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color: #75dba8;
         }
 
+        /* Rodapé */
+
         .rodape {
             text-align: center;
             margin-top: 25px;
@@ -315,47 +367,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             text-decoration: underline;
         }
 
+        /* Ajustes para telas menores */
+
         @media (max-width: 480px) {
+
             .container-cadastro {
                 padding: 25px 20px;
             }
+
         }
+
     </style>
 
 </head>
 
 <body>
 
+    <!-- 21. Formulário de cadastro -->
+
     <div class="container-cadastro">
 
-        <div class="logo">NEXUS TECH</div>
+        <div class="logo">
+            NEXUS TECH
+        </div>
 
-        <p class="subtitulo">Crie sua conta e faça parte da NEXUS.</p>
+        <p class="subtitulo">
+            Crie sua conta e faça parte da NEXUS.
+        </p>
+
+        <!-- 22. Bônus de boas-vindas -->
 
         <div class="bonus">
+
             <strong>🪙 +10.000 NEXUS Coins</strong>
-            <span>Receba seu bônus de boas-vindas ao criar uma conta.</span>
+
+            <span>
+                Receba seu bônus de boas-vindas ao criar uma conta.
+            </span>
+
         </div>
+
+        <!-- 23. Mensagem de retorno -->
 
         <?php if (!empty($mensagem)): ?>
 
-            <div class="mensagem <?= $tipoMensagem ?>">
-                <?= htmlspecialchars($mensagem) ?>
+            <div class="mensagem <?= htmlspecialchars($tipoMensagem, ENT_QUOTES, 'UTF-8') ?>">
+                <?= htmlspecialchars($mensagem, ENT_QUOTES, 'UTF-8') ?>
             </div>
 
         <?php endif; ?>
+
+        <!-- 24. Campos do formulário -->
 
         <form method="POST" action="cadastro.php">
 
             <input
                 type="hidden"
                 name="token"
-                value="<?= htmlspecialchars($_SESSION['token_cadastro']) ?>"
+                value="<?= htmlspecialchars($_SESSION['token_cadastro'], ENT_QUOTES, 'UTF-8') ?>"
             >
 
             <div class="mb-3">
 
-                <label class="form-label">Nome completo</label>
+                <label class="form-label">
+                    Nome completo
+                </label>
 
                 <input
                     type="text"
@@ -363,7 +439,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     class="form-control"
                     placeholder="Digite seu nome"
                     maxlength="120"
-                    value="<?= htmlspecialchars($nome) ?>"
+                    value="<?= htmlspecialchars($nome, ENT_QUOTES, 'UTF-8') ?>"
                     required
                 >
 
@@ -371,7 +447,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <div class="mb-3">
 
-                <label class="form-label">E-mail</label>
+                <label class="form-label">
+                    E-mail
+                </label>
 
                 <input
                     type="email"
@@ -379,7 +457,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     class="form-control"
                     placeholder="seuemail@exemplo.com"
                     maxlength="150"
-                    value="<?= htmlspecialchars($email) ?>"
+                    value="<?= htmlspecialchars($email, ENT_QUOTES, 'UTF-8') ?>"
                     required
                 >
 
@@ -387,7 +465,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <div class="mb-3">
 
-                <label class="form-label">Senha</label>
+                <label class="form-label">
+                    Senha
+                </label>
 
                 <input
                     type="password"
@@ -402,7 +482,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <div class="mb-3">
 
-                <label class="form-label">Confirmar senha</label>
+                <label class="form-label">
+                    Confirmar senha
+                </label>
 
                 <input
                     type="password"
@@ -415,11 +497,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             </div>
 
+            <!-- 25. Botão de envio -->
+
             <button type="submit" class="btn-cadastro">
                 Criar minha conta
             </button>
 
         </form>
+
+        <!-- 26. Links de navegação -->
 
         <div class="rodape">
 
@@ -428,11 +514,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <br><br>
 
-            <a href="../index.php">Voltar para a loja</a>
+            <a href="../index.php">
+                Voltar para a loja
+            </a>
 
         </div>
 
     </div>
 
 </body>
+
 </html>
